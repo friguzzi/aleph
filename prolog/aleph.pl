@@ -33,7 +33,10 @@
 :- module(aleph,
 	  [ aleph/0,
 	    my_read_all/0,
+		aleph_false/0,
+		abducible/1,
 	    induce/0,
+		induce/1,
 		induce_modes/0,
 		induce_tree/0,
 		rdhyp/0, %mah!
@@ -252,10 +255,10 @@ init(yap):-
 		assert_static(delete_file(_))).
 
 init(swi):-
-	redefine_system_predicate(false),
+	%redefine_system_predicate(false),
 	style_check(+singleton),
 	style_check(-discontiguous),
-	dynamic(false/0),
+	dynamic(aleph_false/0),
 	dynamic(example/3),
 	assert((aleph_random(X):- I = 1000000, X is float(random(I-1))/float(I))),
 	assert((gc:- garbage_collect)),
@@ -372,7 +375,7 @@ aleph_manual('http://www.comlab.ox.ac.uk/oucl/groups/machlearn/Aleph/index.html'
 
 
 
-:- multifile false/0.
+:- multifile aleph_false/0.
 :- multifile prune/1.
 :- multifile refine/2.
 :- multifile cost/3.
@@ -4776,6 +4779,64 @@ induce:-
 	show_total_stats,
 	record_total_stats, !.
 induce.
+
+% induce/1: non-interactive theory construction
+% constructs theories 1 clause at a time
+% does greedy cover removal after each clause found
+% Unlinke induce/0, induce/1 returns the theory
+% as a list of clauses.
+induce(Program):-
+	clean_up,
+	set(greedy,true),
+	retractall('$aleph_global'(search_stats,search_stats(_,_))),
+        '$aleph_global'(atoms_left,atoms_left(pos,PosSet)),
+        PosSet \= [],
+	store(portray_search),
+	set(portray_search,false),
+        setting(samplesize,S),
+	setting(abduce,Abduce),
+	record_settings,
+        stopwatch(StartClock),
+        repeat,
+        gen_sample(pos,S),
+
+	retractall('$aleph_global'(besthyp,besthyp(_,_,_,_,_))),
+        asserta('$aleph_global'(besthyp,besthyp([-inf,0,1,-inf],0,(false),[],[]))),
+        get_besthyp(Abduce),
+        (setting(gcws,true) -> sphyp, addgcws; addhyp),
+	show_atoms_left,
+	record_atoms_left,
+        '$aleph_global'(atoms_left,atoms_left(pos,[])),
+        stopwatch(StopClock),
+        Time is StopClock - StartClock,
+        show(theory),
+		copy_theory(Program),
+        record_theory(Time),
+	noset(greedy),
+	reinstate(portray_search),
+		
+        p1_message('time taken'), p_message(Time), 
+	show_total_stats,
+	record_total_stats, !.
+
+copy_theory(Program):-
+	'$aleph_global'(rules,rules(L)),
+        aleph_reverse(L,L1),
+        aleph_member(ClauseNum,L1),
+	'$aleph_global'(theory,theory(ClauseNum,_,_,_,_)),
+	integer(ClauseNum),
+	ClauseNum > 0,
+	'$aleph_global'(theory,theory(ClauseNum,_,Clause,_,_)),
+	!,
+	copy_term(Clause,(Head:-Body)),
+	numbervars((Head:-Body),0,_),
+	add_lit_to_program(Body,Program).
+
+add_lit_to_program((Lit,Lits),Program):-
+	Program = [Lit|Program1],
+	add_lit_to_program(Lits,Program1).
+add_lit_to_program((Lit),Program):-
+	Program = [Lit].
 
 % construct theories 1 clause at a time
 % does not perform greedy cover removal after each clause found
@@ -10725,7 +10786,10 @@ sandbox:safe_primitive('$syspreds':property_predicate(_,_)).
 sandbox:safe_primitive('$syspreds':define_or_generate(_)).
 sandbox:safe_primitive(aleph:my_read_all).
 sandbox:safe_primitive(aleph:aleph).
+sandbox:safe_primitive(aleph:abducible(_)).
+sandbox:safe_primitive(aleph:aleph_false).
 sandbox:safe_primitive(aleph:induce).
+sandbox:safe_primitive(aleph:induce(_)).
 sandbox:safe_primitive(aleph:induce_modes).
 sandbox:safe_primitive(aleph:induce_tree).
 sandbox:safe_primitive(aleph:rdhyp).
@@ -10733,7 +10797,6 @@ sandbox:safe_primitive(aleph:sat(_)).
 sandbox:safe_primitive(aleph:model(_)).
 sandbox:safe_primitive(aleph:reduce).
 sandbox:safe_primitive(aleph:reduce_and_show(_)).
-%sandbox:safe_primitive(aleph:theory_induce(_)).
 sandbox:safe_primitive(aleph:set(_,_)).
 sandbox:safe_primitive(aleph:mode(_,_)).
 sandbox:safe_primitive(aleph:modeh(_,_)).

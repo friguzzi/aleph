@@ -23,7 +23,7 @@
 
 :- determination(mem/2,mem/2).
 :- determination(mem/2,'='/2).
-:-aleph.
+
 :-begin_bg.
 
 :-end_bg.

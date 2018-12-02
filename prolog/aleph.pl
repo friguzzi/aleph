@@ -1806,7 +1806,7 @@ get_refine_gain1(S,Path,MinLength,Pos,Neg,OVars,E,Best1,NewLast):-
 	!.
 
 get_theory_gain1(S,Theory,Last,Best,Pos,Neg,P,N,Best1):-
-        (false -> p_message('constraint violated'),
+        (aleph_false -> p_message('constraint violated'),
                 Contradiction = true;
                 Contradiction = false),
 	Contradiction = false,
@@ -1858,7 +1858,7 @@ get_gain1(S,_,Clause,_,_,_,Best,_,_,_,_,_,_,Best):-
 get_gain1(S,Flag,C,CL,EMin/EL,Last,Best/Node,Path,L1,Pos,Neg,OVars,E,Best1):-
 	split_clause(C,Head,Body),
 	arg(22,S,Search),
-        ((Search \== ic, false) -> p_message('constraint violated'),
+        ((Search \== ic, aleph_false) -> p_message('constraint violated'),
                 Contradiction = true;
                 Contradiction = false),
         Node1 is Last + 1,
@@ -2228,7 +2228,7 @@ get_aleph_lit(Lit,PLit,Arg):-
 % currently does not retain actual substitutions that result in inconsistencies
 % also, only checks for constraints of the form false:- ...
 % this simplifies the check of Body,not(Head) to just Body
-ccheck(S,(false:-Body),[],[0,N|_]):-
+ccheck(S,(alpeh_false:-Body),[],[0,N|_]):-
 	(Body = true ->
 		N is inf;
 		arg(11,S,LContra),
@@ -5068,7 +5068,7 @@ induce_incremental:-
         show(theory),
 	show(pos),
 	show(neg),
-	show(false/0),
+	show(aleph_false/0),
 	show(prune/1),
         record_theory(Time),
 	reinstate_values([interactive,portray_search,proof_strategy,mode]),
@@ -5103,7 +5103,7 @@ induce_incremental(Program):-
         show(theory),
 	show(pos),
 	show(neg),
-	show(false/0),
+	show(aleph_false/0),
 	show(prune/1),
         record_theory(Time),
 	reinstate_values([interactive,portray_search,proof_strategy,mode]),
@@ -5160,7 +5160,7 @@ induce_theory(Program):-
 
 % induce_constraints/0: search for logical constraints that
 % hold in the background knowledge
-% A constraint is a clause of the form false:-... 
+% A constraint is a clause of the form aleph_false:-... 
 % This is modelled on the Claudien program developed by
 % L. De Raedt and his colleagues in Leuven
 % Constraints that are ``nearly true'' can be obtained
@@ -5581,7 +5581,7 @@ process_hypothesis(overgeneral):-
                 goals_to_list(Body,BodyL),
                 clause_to_list(H,HL),
                 aleph_subsumes([Head|BodyL],HL)),
-        assertz((false:- Constraint)),
+        assertz((aleph_false:- Constraint)),
         nl, p_message('added new constraint'). 
 process_hypothesis(overgeneral because not(E)):-
 	!,
@@ -6756,7 +6756,7 @@ auto_extend((H:-B),Lit,(H1:-B1)):-
 	\+(tautology((H1:-B1))),
 	\+(prune((H1:-B1))).
 
-tautology((false:-Body)):-
+tautology((aleph_false:-Body)):-
 	!,
 	in(Body,L1,Rest),
 	in(Rest,not(L2)),
@@ -10007,7 +10007,7 @@ show(constraints):-
         show_stats(coverage,Label),
 	fail.
 show(constraints):-
-	show(false/0).
+	show(aleph_false/0).
 show(Name/Arity):-
 	functor(Pred,Name,Arity),
 	current_predicate(Name,Pred),

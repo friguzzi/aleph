@@ -296,9 +296,7 @@ aleph_manual('http://www.comlab.ox.ac.uk/oucl/groups/machlearn/Aleph/index.html'
 :- dynamic '$aleph_feature'/2.
 :- dynamic '$aleph_global'/2.
 :- dynamic '$aleph_good'/3.
-
 :- dynamic '$aleph_local'/2.
-
 :- dynamic '$aleph_sat'/2.
 :- dynamic '$aleph_sat_atom'/2.
 :- dynamic '$aleph_sat_ovars'/2.
@@ -308,7 +306,6 @@ aleph_manual('http://www.comlab.ox.ac.uk/oucl/groups/machlearn/Aleph/index.html'
 :- dynamic '$aleph_sat_terms'/4.
 :- dynamic '$aleph_sat_vars'/4.
 :- dynamic '$aleph_sat_litinfo'/6.
-
 :- dynamic '$aleph_search_cache'/1.
 :- dynamic '$aleph_search_prunecache'/1.
 :- dynamic '$aleph_search'/2.
@@ -316,42 +313,41 @@ aleph_manual('http://www.comlab.ox.ac.uk/oucl/groups/machlearn/Aleph/index.html'
 :- dynamic '$aleph_search_expansion'/4.
 :- dynamic '$aleph_search_gain'/4.
 :- dynamic '$aleph_search_node'/8.
-
 :- dynamic '$aleph_link_vars'/2.
 :- dynamic '$aleph_has_vars'/3.
 :- dynamic '$aleph_has_ovar'/4.
 :- dynamic '$aleph_has_ivar'/4.
 :- dynamic '$aleph_determination'/2.
+:- dynamic '$aleph_search_seen'/2.
 
-:- thread_local('$aleph_search_cache'/1).
-:- thread_local('$aleph_search_prunecache'/1).
-:- thread_local('$aleph_search'/2).
-:- thread_local('$aleph_search_seen'/2).
-:- thread_local('$aleph_search_expansion'/4).
-:- thread_local('$aleph_search_gain'/4).
-:- thread_local('$aleph_search_node'/8).
-:- thread_local('$aleph_sat_terms'/4). %Aggiunto per swish
-:- thread_local('$aleph_sat_atom'/2). %Aggiunto per swish
-:- thread_local('$aleph_local'/2). %Aggiunto per swish
-:- thread_local('$aleph_determination'/2). %Aggiunto per swish
-:- thread_local('$aleph_link_vars'/2). %Aggiunto per swish
-:- thread_local('$aleph_has_vars'/3). %Aggiunto per swish
-:- thread_local('$aleph_has_ovar'/4). %Aggiunto per swish
-:- thread_local('$aleph_has_ivar'/4). %Aggiunto per swish
-:- thread_local('$aleph_sat'/2).%Aggiunto per swish
-:- thread_local('$aleph_sat_atom'/2).%Aggiunto per swish
-:- thread_local('$aleph_sat_ovars'/2).%Aggiunto per swish
-:- thread_local('$aleph_sat_ivars'/2).%Aggiunto per swish
+:- thread_local '$aleph_feature'/2.
+:- thread_local '$aleph_global'/2.
+:- thread_local '$aleph_good'/3.
+:- thread_local '$aleph_local'/2.
+:- thread_local '$aleph_sat'/2.
+:- thread_local '$aleph_sat_atom'/2.
+:- thread_local '$aleph_sat_ovars'/2.
+:- thread_local '$aleph_sat_ivars'/2.
+:- thread_local '$aleph_sat_varsequiv'/2.
+:- thread_local '$aleph_sat_varscopy'/3.
+:- thread_local '$aleph_sat_terms'/4.
+:- thread_local '$aleph_sat_vars'/4.
+:- thread_local '$aleph_sat_litinfo'/6.
+:- thread_local '$aleph_search_cache'/1.
+:- thread_local '$aleph_search_prunecache'/1.
+:- thread_local '$aleph_search'/2.
+:- thread_local '$aleph_search_seen'/2.
+:- thread_local '$aleph_search_expansion'/4.
+:- thread_local '$aleph_search_gain'/4.
+:- thread_local '$aleph_search_node'/8.
+:- thread_local '$aleph_link_vars'/2.
+:- thread_local '$aleph_has_vars'/3.
+:- thread_local '$aleph_has_ovar'/4.
+:- thread_local '$aleph_has_ivar'/4.
+:- thread_local '$aleph_determination'/2.
+:- thread_local '$aleph_search_seen'/2.
 
-:- thread_local('$aleph_sat_varsequiv'/2).%Aggiunto per swish
-:- thread_local('$aleph_sat_varscopy'/3).%Aggiunto per swish
-:- thread_local('$aleph_sat_vars'/4).%Aggiunto per swish
-:- thread_local('$aleph_sat_litinfo'/6).%Aggiunto per swish
 
-:- thread_local('$aleph_local'/2).%Aggiunto per swish
-:- thread_local('$aleph_feature'/2).%Aggiunto per swish
-:- thread_local('$aleph_global'/2).%Aggiunto per swish
-:- thread_local('$aleph_good'/3).%Aggiunto per swish
 
 :- thread_local(pos_on/0).%Aggiunto per swish
 :- thread_local(neg_on/0).%Aggiunto per swish

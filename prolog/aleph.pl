@@ -56,6 +56,7 @@
 		induce_constraints/0,
 		induce_constraints/1,
 		rdhyp/0,
+		sphyp/0,
 		reduce/0,
 		reduce_and_show/1,
 		sat/1,
@@ -65,6 +66,7 @@
 		modeh/2,
 		modeb/2,
 		determination/2,
+		show/1,
 		op(500,fy,#),
 		op(500,fy,*),
 		op(900,xfy,because)

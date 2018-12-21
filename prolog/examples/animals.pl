@@ -28,11 +28,12 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Mode declarations
+:- set(lookahead,2).	% to allow lookahead to lteq/2
 
 :- modeh(1,class(+animal,-class)).
 :- modeb(1,has_gills(+animal)).
 :- modeb(1,has_covering(+animal,#covering)).
-:- modeb(1,has_legs(+animal,#nat)).
+:- modeb(1,has_legs(+animal,#integer)).
 :- modeb(1,homeothermic(+animal)).
 :- modeb(1,has_eggs(+animal)).
 :- modeb(1,not(has_gills(+animal))).

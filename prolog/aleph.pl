@@ -36,21 +36,14 @@
 		abducible/1,
 		induce/1,
 		induce_tree/1,
-		induce_max/0,
 		induce_max/1,
-		induce_cover/0,
 		induce_cover/1,
-		induce_incremental/0,
 		induce_incremental/1,
 		induce_clauses/1,
-		induce_theory/0,
 		induce_theory/1,
 		induce_modes/1,
-		induce_features/0,
 		induce_features/1,
 		induce_constraints/1,
-		rdhyp/0,
-		sphyp/0,
 		reduce_and_show/1,
 		sat/1,
 		set/2,
@@ -59,7 +52,7 @@
 		goals_to_list/2,
                 clause_to_list/2,
                 aleph_subsumes/2,
-		hypothesis/4,
+		hypothesis/3,
 		var_types/3,
 		show/1,
 		random/2,
@@ -89,11 +82,14 @@ inf(1e10).
 :- meta_predicate reduce_and_show(:).
 :- meta_predicate sat(:).
 :- meta_predicate set(:,+).
+:- meta_predicate settting(:,+).
 :- meta_predicate noset(:).
+:- meta_predicate model(:).
 :- meta_predicate mode(:,+).
-:- meta_predicate modeh(:).
-:- meta_predicate modeb(:).
+:- meta_predicate modeh(:,+).
+:- meta_predicate modeb(:,+).
 :- meta_predicate show(:).
+:- meta_predicate hypothesis(:,+,-).
 
 :- meta_predicate read_all(:).
 
@@ -149,8 +145,17 @@ system:term_expansion((:- aleph), []) :-
   assert(M:(induce_clauses:-induce_clauses(_))),
   assert(M:(induce:-induce(_))),
   assert(M:(induce_tree:-induce_tree(_))),
+  assert(M:(induce_max:-induce_max(_))),
+  assert(M:(induce_cover:-induce_cover(_))),
+  assert(M:(induce_theory:-induce_theory(_))),
+  assert(M:(induce_features:-induce_features(_))),
+  assert(M:(rdhyp:-rdhyp(_))),
+  assert(M:(sphyp:-sphyp_i(_))),
+  assert(M:(addgcws:-addgcws_i(_))),
+  assert(M:(rmhyp:-rmhyp_i(_))),
 	clean_up(M),
-	reset(M).
+        reset(M).
+
 
 system:term_expansion((:- begin_bg), []) :-
   prolog_load_context(module, M),
@@ -4874,30 +4879,6 @@ add_lit_to_program((Lit),[Lit]):-trace.
 % constructs unique ``maximum cover set'' solution
 % 	by obtaining the best clause covering each example
 % slow
-induce_max:-
-	input_mod(M),
-	clean_up(M),
-	retractall(M:'$aleph_global'(search_stats,search_stats(_,_))),
-	M:'$aleph_global'(atoms,atoms(pos,PosSet)),
-	PosSet \= [],
-	store(portray_search,M),
-	set(portray_search,false,M),
-	record_settings(M),
-	stopwatch(StartClock),
-	set(maxcover,true,M),
-	aleph_induce_max(PosSet,M),
-	stopwatch(StopClock),
-	Time is StopClock - StartClock,
-	show(theory,M),
-	record_theory(Time),
-	noset(maxcover,M),
-	reinstate(portray_search,M),
-	reinstate(greedy,M),
-	p1_message('time taken'), p_message(Time),
-	show_total_stats(M),
-	record_total_stats(M), !.
-induce_max.
-
 induce_max(M:Program):-
 	clean_up(M),
 	retractall(M:'$aleph_global'(search_stats,search_stats(_,_))),
@@ -4944,35 +4925,7 @@ induce_max1(_).
 
 % construct theories 1 clause at a time
 % does not perform greedy cover removal after each clause found
-induce_cover:-
-	input_mod(M),
-	clean_up(M),
-	retractall(M:'$aleph_global'(search_stats,search_stats(_,_))),
-	M:'$aleph_global'(atoms,atoms(pos,PosSet)),
-	PosSet \= [],
-	store(portray_search,M),
-	set(portray_search,false,M),
-	setting(samplesize,S,M),
-	setting(abduce,Abduce,M),
-	record_settings(M),
-	stopwatch(StartClock),
-        repeat,
-	gen_sample(pos,S,M),
-	asserta(M:'$aleph_global'(besthyp,besthyp([-inf,0,1,-inf],0,
-					(false),[],[]))),
-	get_besthyp(Abduce,M),
-	addhyp(M),
-        M:'$aleph_global'(atoms_left,atoms_left(pos,[])),
-	stopwatch(StopClock),
-	Time is StopClock - StartClock,
-        show(theory,M), 
-	record_theory(Time,M),
-	reinstate(portray_search,M),
-	reinstate(greedy,M),
-	p1_message('time taken'), p_message(Time), 
-	show_total_stats(M),
-	record_total_stats(M), !.
-induce_cover.
+
 
 induce_cover(M:Program):-
 	clean_up(M),
@@ -5024,40 +4977,6 @@ induce_cover(M:Program):-
 %		overspecific because E: E is added as a new positive example
 %		X: where X is some aleph command like "covers"
 %		Ctrl-d (eof): return to Step 1		
-induce_incremental:-
-	input_mod(M),
-	clean_up(M),
-	retractall(M:'$aleph_global'(search_stats,search_stats(_,_))),
-	store_values([interactive,portray_search,proof_strategy,mode],M),
-	set(portray_search,false,M),
-	set(proof_strategy,sld,M),
-	set(interactive,true,M),
-	record_settings(M),
-        stopwatch(StartClock),
-        repeat,
-	ask_example(E,M),
-	((E = end_of_file; E = none) -> true;
-		once(record_example(check,pos,E,N,M)),
-		retractall(M:'$aleph_global'(example_selected,
-						example_selected(_,_))),
-        	asserta(M:'$aleph_global'(example_selected,
-						example_selected(pos,N))),
-		once(sat(N,M)),
-		once(reduce(M:_)),
-		once(process_hypothesis(M)),
-		fail),
-	!,
-        stopwatch(StopClock),
-        Time is StopClock - StartClock,
-        show(theory,M),
-	show(pos,M),
-	show(neg,M),
-	show(aleph_false/0,M),
-	show(prune/1,M),
-        record_theory(Time,M),
-	reinstate_values([interactive,portray_search,proof_strategy,mode],M),
-        p1_message('time taken'), p_message(Time).
-
 
 induce_incremental(M:Program):-
 	clean_up(M),
@@ -5095,10 +5014,7 @@ induce_incremental(M:Program):-
 
 % induce_theory/0: does theory-level search
 % currently only with search = rls; and evalfn = accuracy
-induce_theory:-
-	input_mod(M),
-	setting(search,Search,M),
-	aleph_induce_theory(Search,M).
+
 
 % induce entire theories from batch data
 % using a randomised local search
@@ -5190,40 +5106,6 @@ induce_modes(M:Modes):-
 %       (b) search for good clauses using the example selected;
 %       (c) construct new features using good clauses
 
-induce_features:-
-	input_mod(M),
-	clean_up(M),
-	store_values([good,check_good,updateback,construct_features,samplesize,greedy,explore,lazy_on_contradiction],M),
-	set(good,true,M),
-	set(check_good,true,M),
-	set(updateback,false,M),
-	set(construct_features,true,M),
-	set(lazy_on_contradiction,true,M),
-	(setting(feature_construction,exhaustive,M) -> set(explore,true,M);
-			true),
-	setting(max_features,FMax,M),
-        record_settings(M),
-        stopwatch(StartClock),
-        M:'$aleph_global'(atoms_left,atoms_left(pos,AtomsLeft)), 
-	repeat,
-        gen_sample(pos,0,M),
-	retractall(M:'$aleph_global'(besthyp,besthyp(_,_,_,_,_))),
-        asserta(M:'$aleph_global'(besthyp,besthyp([-inf,0,1,-inf],0,(false),[],[]))),
-        get_besthyp(false,M),
-        addhyp(M),
-	show_atoms_left(M),
-	record_atoms_left(M),
-        ((M:'$aleph_search'(last_good,LastGood), LastGood >= FMax);
-        	M:'$aleph_global'(atoms_left,atoms_left(pos,[]))), !,
-	gen_features(M),
-        stopwatch(StopClock),
-        Time is StopClock - StartClock,
-	show(features,M),
-        record_features(Time,M),
-        retract(M:'$aleph_global'(atoms_left,atoms_left(pos,_))), 
-        assertz(M:'$aleph_global'(atoms_left,atoms_left(pos,AtomsLeft))), 
-        reinstate_values([good,check_good,updateback,construct_features,samplesize,greedy,explore,lazy_on_contradiction],M), !.
-induce_features.
 
 induce_features(M:Features):-
 	clean_up(M),
@@ -9751,8 +9633,7 @@ symmetric(Name/Arity,M):-
 lazy_evaluate(Name/Arity,M):-
         assertz(M:'$aleph_global'(lazy_evaluate,lazy_evaluate(Name/Arity))).
 
-model(Name/Arity):-
-	input_mod(M),
+model(M:Name/Arity):-
 	model(Name/Arity,M).
 
 model(Name/Arity,M):-
@@ -10084,6 +9965,9 @@ best_hypothesis(Head1,Body1,[P,N,L],M):-
 	split_clause(Clause,Head2,Body2), !,
 	Head1 = Head2, Body1 = Body2.
 
+hypothesis(M:Head1,Body1,Label):-
+	hypothesis(Head1,Body1,Label,M).
+
 hypothesis(Head1,Body1,Label,M):-
 	M:'$aleph_search'(pclause,pclause(Head2,Body2)), !,
 	Head1 = Head2, Body1 = Body2,
@@ -10096,8 +9980,7 @@ hypothesis(Head1,Body1,Label,M):-
 	Head1 = Head2, Body1 = Body2,
 	get_hyp_label((Head2:-Body2),Label,M).
 
-rdhyp:-
-	input_mod(M),
+rdhyp(M:_):-
 	retractall(M:'$aleph_search'(pclause,_)),
 	retractall(M:'$aleph_search'(covers,_)),
 	retractall(M:'$aleph_search'(coversn,_)),
@@ -10105,6 +9988,9 @@ rdhyp:-
         add_hyp(Clause,M),
         nl,
         show(hypothesis,M).
+
+addhyp_i(M:_):-
+	addhyp(M).
 
 addhyp(M):-
 	M:'$aleph_global'(hypothesis,hypothesis(Label,Theory,PCover,NCover)),
@@ -10145,8 +10031,9 @@ add_bottom(M):-
 	
 % specialise a hypothesis by recursive construction of
 % abnormality predicates
-sphyp:-
-	input_mod(M),
+
+
+sphyp_i(M:_):-
 	sphyp(M).
 
 sphyp(M):-
@@ -10162,11 +10049,17 @@ sphyp(M):-
 			hypothesis([P,N,L|T],Clause,PCover,NCover))),
         reinstate(searchstate,M).
 
+addgcws_i(M:_):-
+	addgcws(M).
+
 addgcws(M):-
         retract(M:'$aleph_search'(gcwshyp,hypothesis(Label,C,P,N))), !,   
 	asserta(M:'$aleph_search'(gcwshyp,hypothesis(Label,C,P,N))),
 	addhyp(M),
 	add_gcws(M).
+
+rmhyp_i(M:_):-
+	rmhyp(M).
 
 rmhyp(M):-
         retract(M:'$aleph_search'(pclause,pclause(Head,Body))),
@@ -10174,7 +10067,7 @@ rmhyp(M):-
 rmhyp(M):-
         retract(M:'$aleph_global'(hypothesis,hypothesis(Label,Clause1,P,N))),
         asserta(M:'$aleph_local'(hypothesis,hypothesis(Label,Clause1,P,N))), !.
-rmhyp(_M).
+rmhyp(_).
 
 
 covers(M):-
@@ -11038,27 +10931,17 @@ write_profile_data([]).
 sandbox:safe_primitive('$syspreds':current_module(_)).
 sandbox:safe_primitive('$syspreds':property_predicate(_,_)).
 sandbox:safe_primitive('$syspreds':define_or_generate(_)).
-sandbox:safe_primitive(aleph:aleph).
 sandbox:safe_primitive(aleph:abducible(_)).
-sandbox:safe_primitive(aleph:induce).
 sandbox:safe_primitive(aleph:induce(_)).
-sandbox:safe_primitive(aleph:induce_tree).
 sandbox:safe_primitive(aleph:induce_tree(_)).
-sandbox:safe_primitive(aleph:induce_max).
 sandbox:safe_primitive(aleph:induce_max(_)).
-sandbox:safe_primitive(aleph:induce_cover).
 sandbox:safe_primitive(aleph:induce_cover(_)).
-sandbox:safe_primitive(aleph:induce_incremental).
 sandbox:safe_primitive(aleph:induce_incremental(_)).
-sandbox:safe_primitive(aleph:induce_clauses).
 sandbox:safe_primitive(aleph:induce_clauses(_)).
-sandbox:safe_primitive(aleph:induce_theory).
 sandbox:safe_primitive(aleph:induce_theory(_)).
 sandbox:safe_primitive(aleph:induce_modes(_)).
 sandbox:safe_primitive(aleph:induce_constraints(_)).
-sandbox:safe_primitive(aleph:induce_features).
 sandbox:safe_primitive(aleph:induce_features(_)).
-sandbox:safe_primitive(aleph:rdhyp).
 sandbox:safe_primitive(aleph:sat(_)).
 sandbox:safe_primitive(aleph:model(_)).
 sandbox:safe_primitive(aleph:reduce).

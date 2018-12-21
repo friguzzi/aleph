@@ -94,17 +94,17 @@ aleph :-
 	clean_up,
 	reset.
 
-user:term_expansion((:- begin_bg), []) :-
+system:term_expansion((:- begin_bg), []) :-
   input_mod(M),!,
   assert(M:bg_on).
 
-user:term_expansion(C, []) :-
+system:term_expansion(C, []) :-
   C\= (:- end_bg),
 	
   input_mod(M),
   M:bg_on,!,assert(C).
 
-user:term_expansion((:- end_bg), []) :-
+system:term_expansion((:- end_bg), []) :-
   input_mod(M),!,
   retractall(M:bg_on).
   %findall(C,M:bgc(C),L),
@@ -116,20 +116,20 @@ user:term_expansion((:- end_bg), []) :-
  % ;
  %   assert_all(L,M,_)
  % ).
-user:term_expansion((:- begin_in_pos), []) :-
+system:term_expansion((:- begin_in_pos), []) :-
   input_mod(M),!,
   assert(M:pos_on),
   clean_up_examples(pos),
 	asserta('$aleph_global'(size,size(pos,0))).
 	
 
-user:term_expansion(C, []) :-
+system:term_expansion(C, []) :-
 	
   C\= (:- end_in_pos),
   input_mod(M),
   M:pos_on,!,record_example(nocheck,pos,C,_).
 
-user:term_expansion((:- end_in_pos), []) :-
+system:term_expansion((:- end_in_pos), []) :-
   input_mod(M),!,
   retractall(M:pos_on),
   %findall(C,M:incpos(C),L),
@@ -150,19 +150,19 @@ user:term_expansion((:- end_in_pos), []) :-
 
 %%%%%%
 
-user:term_expansion((:- begin_in_neg), []) :-
+system:term_expansion((:- begin_in_neg), []) :-
   input_mod(M),!,
   assert(M:neg_on),
 	clean_up_examples(neg),
 	asserta('$aleph_global'(size,size(neg,0))).
 
-user:term_expansion(C, []) :-
+system:term_expansion(C, []) :-
 	
   C\= (:- end_in_neg),
   input_mod(M),
   M:neg_on,!,record_example(nocheck,neg,C,_).
 
-user:term_expansion((:- end_in_neg), []) :-
+system:term_expansion((:- end_in_neg), []) :-
   input_mod(M),!,
   retractall(M:neg_on),
   %findall(C,M:incneg(C),L),
@@ -2226,7 +2226,7 @@ get_aleph_lit(Lit,PLit,Arg):-
 % currently does not retain actual substitutions that result in inconsistencies
 % also, only checks for constraints of the form false:- ...
 % this simplifies the check of Body,not(Head) to just Body
-ccheck(S,(alpeh_false:-Body),[],[0,N|_]):-
+ccheck(S,(aleph_false:-Body),[],[0,N|_]):-
 	(Body = true ->
 		N is inf;
 		arg(11,S,LContra),

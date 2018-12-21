@@ -56,6 +56,7 @@
 		induce_constraints/0,
 		induce_constraints/1,
 		rdhyp/0,
+		sphyp/0,
 		reduce/0,
 		reduce_and_show/1,
 		sat/1,
@@ -70,6 +71,7 @@
                 aleph_subsumes/2,
 		hypothesis/4,
 		var_types/3,
+		show/1,
 		op(500,fy,#),
 		op(500,fy,*),
 		op(900,xfy,because)

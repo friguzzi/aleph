@@ -73,6 +73,7 @@
 		hypothesis/4,
 		var_types/3,
 		show/1,
+		random/2,
 		op(500,fy,#),
 		op(500,fy,*),
 		op(900,xfy,because)
@@ -102,7 +103,7 @@ inf(1e10).
 
 /* INIT ALEPH */
 
-user:term_expansion((:- aleph), []) :-
+system:term_expansion((:- aleph), []) :-
   prolog_load_context(module, M),
   assert(input_mod(M)),
 	nl, nl,
@@ -142,22 +143,23 @@ user:term_expansion((:- aleph), []) :-
  '$aleph_has_ivar'/4,
  '$aleph_determination'/2,
  '$aleph_search_seen'/2)),
+  M:dynamic((prune/1,cost/3)),
   style_check(-discontiguous),
   init(swi),
 	clean_up(M),
 	reset(M).
 
-user:term_expansion((:- begin_bg), []) :-
+system:term_expansion((:- begin_bg), []) :-
   input_mod(M),!,
   assert(M:bg_on).
 
-user:term_expansion(C, C) :-
+system:term_expansion(C, C) :-
   C\= (:- end_bg),
 	
   input_mod(M),
   M:bg_on,!.
 
-user:term_expansion((:- end_bg), []) :-
+system:term_expansion((:- end_bg), []) :-
   input_mod(M),!,
   retractall(M:bg_on).
   %findall(C,M:bgc(C),L),
@@ -169,20 +171,20 @@ user:term_expansion((:- end_bg), []) :-
  % ;
  %   assert_all(L,M,_)
  % ).
-user:term_expansion((:- begin_in_pos), []) :-
+system:term_expansion((:- begin_in_pos), []) :-
   input_mod(M),!,
   assert(M:pos_on),
   clean_up_examples(pos,M),
 	asserta(M:'$aleph_global'(size,size(pos,0))).
 	
 
-user:term_expansion(C, []) :-
+system:term_expansion(C, []) :-
 	
   C\= (:- end_in_pos),
   input_mod(M),
   M:pos_on,!,record_example(nocheck,pos,C,_,M).
 
-user:term_expansion((:- end_in_pos), []) :-
+system:term_expansion((:- end_in_pos), []) :-
   input_mod(M),!,
   retractall(M:pos_on),
   %findall(C,M:incpos(C),L),
@@ -203,19 +205,19 @@ user:term_expansion((:- end_in_pos), []) :-
 
 %%%%%%
 
-user:term_expansion((:- begin_in_neg), []) :-
+system:term_expansion((:- begin_in_neg), []) :-
   input_mod(M),!,
   assert(M:neg_on),
 	clean_up_examples(neg,M),
 	asserta(M:'$aleph_global'(size,size(neg,0))).
 
-user:term_expansion(C, []) :-
+system:term_expansion(C, []) :-
 	
   C\= (:- end_in_neg),
   input_mod(M),
   M:neg_on,!,record_example(nocheck,neg,C,_,M).
 
-user:term_expansion((:- end_in_neg), []) :-
+system:term_expansion((:- end_in_neg), []) :-
   input_mod(M),!,
   retractall(M:neg_on),
   %findall(C,M:incneg(C),L),
@@ -1678,7 +1680,7 @@ get_gain(S,Flag,Last,Best/Node,Path,C,TV,Len1,MinLen,L1,Pos,Neg,OVars,E,Best1,La
 	assertz(M:'$aleph_search'(pclause,pclause(Head,Body))),
         arg(6,S,Verbosity),
         (Verbosity >= 1 ->
-		pp_dclause(Clause);
+		pp_dclause(Clause,M);
 		true),
         get_gain1(S,Flag,Clause,CLen,EMin/ELength,Last,Best/Node,
                         Path,L1,Pos,Neg,OVars,E,Best1,M),
@@ -1755,7 +1757,7 @@ get_refine_gain1(S,Path,MinLength,Pos,Neg,OVars,E,Best1,NewLast,M):-
 	retractall(M:'$aleph_search'(covers,_)),
 	retractall(M:'$aleph_search'(coversn,_)),
 	Path1 = CL-[Example,Type,Ids1,Clause],
-	split_clause(Clause,Head,Body,M),
+	split_clause(Clause,Head,Body),
 	nlits(Body,CLength0),
 	CLength is CLength0 + 1,
 	length_ok(S,MinLength,CLength,0,EMin,ELength),
@@ -1769,7 +1771,7 @@ get_refine_gain1(S,Path,MinLength,Pos,Neg,OVars,E,Best1,NewLast,M):-
         arg(6,S,Verbosity),
         (Verbosity >= 1 ->
 		p_message('new refinement'),
-		pp_dclause(Clause);
+		pp_dclause(Clause,M);
 	true),
 	once(get_gain1(S,upper,Clause,CLength,EMin/ELength,OldLast,OldBest,
 		Path1,[],Pos,Neg,OVars,E,Best1,M)),
@@ -1836,7 +1838,7 @@ get_gain1(S,_,Clause,_,_,_,Best,_,_,_,_,_,_,Best,M):-
 	arg(6,S,Verbosity),
         (Verbosity >= 1 -> p_message('in prune cache'); true).
 get_gain1(S,Flag,C,CL,EMin/EL,Last,Best/Node,Path,L1,Pos,Neg,OVars,E,Best1,M):-
-	split_clause(C,Head,Body,M),
+	split_clause(C,Head,Body),
 	arg(22,S,Search),
         ((Search \== ic, M:aleph_false) -> p_message('constraint violated'),
                 Contradiction = true;
@@ -1853,7 +1855,7 @@ get_gain1(S,Flag,C,CL,EMin/EL,Last,Best/Node,Path,L1,Pos,Neg,OVars,E,Best1,M):-
         arg(3,S,RefineOp),
 	refinement_ok(RefineOp,Entry,M),
 	arg(32,S,Lang),
-	lang_ok((Head:-Body),Lang,M),
+	lang_ok((Head:-Body),Lang),
 	arg(38,S,NewVars),
 	newvars_ok((Head:-Body),NewVars,M),
 	arg(34,S,Proof),
@@ -1937,21 +1939,21 @@ clause_ok(Clause,_,M):-
 	M:prune(Clause), !, fail.
 clause_ok(Clause,_,M):-
 	setting(language,Lang,M),
-	\+ lang_ok(Clause,Lang,M), !, fail.
+	\+ lang_ok(Clause,Lang), !, fail.
 clause_ok(Clause,_,M):-
 	setting(newvars,NewVars,M),
 	\+ newvars_ok(Clause,NewVars,M), !, fail.
 clause_ok(_,_,_M).
 
 % check to see if refinement has been produced before
-refinement_ok(false,_):- !.
-refinement_ok(rls,_):- !.
-refinement_ok(_,false):- !.
-refinement_ok(_,Entry):-
-	(check_cache(Entry,pos,_); check_cache(Entry,neg,_)), !,
+refinement_ok(false,_,_M):- !.
+refinement_ok(rls,_,_M):- !.
+refinement_ok(_,false,_M):- !.
+refinement_ok(_,Entry,M):-
+	(check_cache(Entry,pos,_,M); check_cache(Entry,neg,_,M)), !,
 	p_message('redundant refinement'),
 	fail.
-refinement_ok(_,_).
+refinement_ok(_,_,_M).
 
 
 % specialised redundancy check with equality theory
@@ -2208,7 +2210,7 @@ get_aleph_lit(Lit,PLit,Arg):-
 % currently does not retain actual substitutions that result in inconsistencies
 % also, only checks for constraints of the form false:- ...
 % this simplifies the check of Body,not(Head) to just Body
-ccheck(S,(alpeh_false:-Body),[],[0,N|_],M):-
+ccheck(S,(aleph_false:-Body),[],[0,N|_],M):-
 	(Body = true ->
 		N is inf;
 		arg(11,S,LContra),
@@ -3162,7 +3164,7 @@ aleph_hash_term([L0],Entry):-
 % T R E E S
 
 construct_tree(Type,M):-
-	setting(searchtime,Time),
+	setting(searchtime,Time,M),
 	Inf is inf,
         Time =\= Inf,
         SearchTime is integer(Time),
@@ -3185,13 +3187,13 @@ find_tree(Type,M):-
 	get_start_distribution(Type,Distribution,M),
 	asserta(M:'$aleph_search'(tree_startdistribution,d(Type,Distribution))),
 	M:'$aleph_global'(atoms_left,atoms_left(pos,Pos)),
-	setting(dependent,Argno),
+	setting(dependent,Argno,M),
 	p_message('constructing tree'),
 	stopwatch(StartClock),
 	get_search_settings(S,M),
 	auto_refine(false,Head,M),
 	gen_leaf(Leaf,M),
-	eval_treenode(S,Type,(Head:-true,M),[Argno],Pos,Examples,N,Cost),
+	eval_treenode(S,Type,(Head:-true),[Argno],Pos,Examples,N,Cost,M),
 	asserta(M:'$aleph_search'(tree_leaf,l(Leaf,Leaf,[Head,Cost,N],Examples))),
 	find_tree1([Leaf],S,Type,[Argno],M),
 	prune_rules(S,Type,[Argno],M),
@@ -3266,7 +3268,7 @@ prune_rule(Tree,S,PredictArg,[Clause,_,N],Examples,[PrunedClause,E1,NCov],NewEx,
 	node_stats(Tree,Examples,PredictArg,Total-Distribution,M),
 	leaf_prediction(Tree,Total-Distribution,_,Incorrect),
 	estimate_error(Tree,Incorrect,Total,Upper,M),
-	split_clause(Clause,Head,Body,M),
+	split_clause(Clause,Head,Body),
 	goals_to_list(Body,BodyL),
 	arg(14,S,Depth),
 	arg(29,S,Time),
@@ -3355,7 +3357,7 @@ add_tree(_,Tree,Predict,M):-
 	Leaf = [Clause,Cost,P],
 	add_prediction(Tree,Clause,Predict,Examples,Clause1,M),
 	p_message('best clause'),
-	pp_dclause(Clause1),
+	pp_dclause(Clause1,M),
         nlits(Clause,L),
 	Gain is -Cost,
         asserta(M:'$aleph_global'(hypothesis,hypothesis([P,0,L,Gain],Clause1,Examples,[]))),
@@ -3366,18 +3368,18 @@ add_tree(_,_,_,_M).
 add_prediction(Tree,Clause,PredictArg,Examples,Clause1,M):-
 	split_clause(Clause,Head,_),
 	(Tree = model ->
-		setting(evalfn,Evalfn),
+		setting(evalfn,Evalfn,M),
 		add_model(Evalfn,Clause,PredictArg,Examples,Clause1,_,_,M);
 		node_stats(Tree,Examples,PredictArg,Distribution,M),
 		leaf_prediction(Tree,Distribution,Prediction,Error),
 		tparg(PredictArg,Head,Var),
 		add_prediction(Tree,Clause,Var,Prediction,Error,Clause1,M)).
 
-add_prediction(classification,Clause,Var,Prediction,_,Clause1):-
+add_prediction(classification,Clause,Var,Prediction,_,Clause1,_M):-
 	extend_clause(Clause,(Var = Prediction),Clause1).
-add_prediction(class_probability,Clause,Var,Prediction,_,Clause1):-
+add_prediction(class_probability,Clause,Var,Prediction,_,Clause1,_M):-
 	extend_clause(Clause,(random(Var,Prediction)),Clause1).
-add_prediction(regression,Clause,Var,Mean,Sd,Clause1):-
+add_prediction(regression,Clause,Var,Mean,Sd,Clause1,_M):-
 	extend_clause(Clause,(random(Var,normal(Mean,Sd))),Clause1).
 
 add_model(Evalfn,Clause,PredictArg,Examples,_,_,_,M):-
@@ -3461,9 +3463,9 @@ can_split(S,Type,Predict,Leaf,Left,Right,M):-
 	p_message('found clauses'),
 	Left = [ClF,CostF|_], Right = [ClS,CostS|_],
 	arg(4,S,_/Evalfn),
-	pp_dclause(ClS),
+	pp_dclause(ClS,M),
 	print_eval(Evalfn,CostS),
-	pp_dclause(ClF),
+	pp_dclause(ClF,M),
 	print_eval(Evalfn,CostF),
 	p1_message('expected cost reduction'), p_message(Gain).
 
@@ -3482,17 +3484,17 @@ get_best_subtree(S,Type,Predict,[Clause,Cost,N],Examples,Gain,Left,Right,M):-
 	tree_refine_ok(Type,ClS,M),
 	eval_treenode(S,Type,ClS,Predict,Examples,ExS,NS,CostS,M),
 	NS >= MinPos,
-	rm_intervals(ExS,Examples,ExF,M),
+	rm_intervals(ExS,Examples,ExF),
 	split_clause(ClS,Head,Body1),
-	get_goaldiffs(Body,Body1,Diff,M),
+	get_goaldiffs(Body,Body1,Diff),
 	extend_clause(Clause,not(Diff),ClF),
 	eval_treenode(S,Type,ClF,Predict,ExF,NF,CostF,M),
 	NF >= MinPos,
 	AvLeafCost is (NS*CostS + NF*CostF)/N,
 	CostReduction is Cost - AvLeafCost,
 	(Interactive = false ->
-		pp_dclause(ClS), print_eval(Evalfn,CostS),
-		pp_dclause(ClF), print_eval(Evalfn,CostF),
+		pp_dclause(ClS,M), print_eval(Evalfn,CostS),
+		pp_dclause(ClF,M), print_eval(Evalfn,CostF),
 		p1_message('expected cost reduction'), p_message(CostReduction),
 		M:'$aleph_search'(tree_gain,tree_gain(BestSoFar,_,_)),
 		CostReduction > BestSoFar,
@@ -3516,7 +3518,7 @@ get_best_subtree(false,_,Gain,Left,Right,M):-
 get_best_subtree(true,Clause,Gain,Left,Right,M):-
 	nl, write('Extending path: '), nl,
 	write('---------------'), nl,
-	pp_dclause(Clause),
+	pp_dclause(Clause,M),
 	findall(MCR-[Left,Right],
 		(M:'$aleph_search'(tree_gain,tree_gain(CostReduction,Left,Right)), 
 		  MCR is -1*CostReduction), 
@@ -4840,7 +4842,7 @@ copy_theory_eval(0,_,Label,M):-
 	M:'$aleph_global'(hypothesis,hypothesis(_,Clause,_,_)), !,
 	label_create(Clause,Label),
 	p_message('Rule 0'),
-	pp_dclause(Clause),
+	pp_dclause(Clause,M),
 	extract_count(pos,Label,PC),
 	extract_count(neg,Label,NC),
 	extract_length(Label,L),
@@ -6535,9 +6537,9 @@ process_modes(M):-
 	split_args(Mode,Mode,I,O,_,M),
 	functor(Lit,Name,Arity),
 	copy_modeterms(Mode,Lit,Arity),
-	add_ivars(Lit,I),
-	add_ovars(Lit,O),
-	add_vars(Lit,I,O),
+	add_ivars(Lit,I,M),
+	add_ovars(Lit,O,M),
+	add_vars(Lit,I,O,M),
 	fail.
 process_modes(_M).
 
@@ -6562,13 +6564,13 @@ process_mode(Mode,M):-
 	add_vars(Lit,I,O,M).
 
 add_ioc_links(Lit,I,O,C,M):-
-	Clause = (M:'$aleph_link_vars'(Lit,Lits):-
-			var_types(Lits,VT,M),
+	Clause = ('$aleph_link_vars'(Lit,Lits):-
+			aleph:var_types(Lits,VT,M),
 			Body),
 	get_o_links(O,Lit,VT,true,OGoals,M),
 	get_i_links(I,Lit,VT,OGoals,IOGoals),
 	get_c_links(C,Lit,IOGoals,Body),
-	assert(Clause).
+	assert(M:Clause).
 
 add_ovars(Lit,O,M):-
 	aleph_member(Pos/Type,O),
@@ -6600,8 +6602,8 @@ get_var_types([Pos/Type|PlaceTypes],Lit,[Var/Type|Rest]):-
 get_o_links([],_,_,Goals,Goals,_M).
 get_o_links([Pos/Type|T],Lit,VarTypes,GoalsSoFar,Goals,M):-
 	tparg(Pos,Lit,V),
-	Goal = (aleph_output_var(V,Type,VarTypes);
-		aleph_output_var(V,Type,Lit,Pos,M)),
+	Goal = (aleph:aleph_output_var(V,Type,VarTypes);
+		aleph:aleph_output_var(V,Type,Lit,Pos,M)),
 	prefix_lits((Goal),GoalsSoFar,G1),
 	get_o_links(T,Lit,VarTypes,G1,Goals,M).
 
@@ -6609,7 +6611,7 @@ get_o_links([Pos/Type|T],Lit,VarTypes,GoalsSoFar,Goals,M):-
 get_i_links([],_,_,Goals,Goals).
 get_i_links([Pos/Type|T],Lit,VarTypes,GoalsSoFar,Goals):-
 	tparg(Pos,Lit,V),
-	Goal = aleph_input_var(V,Type,VarTypes),
+	Goal = aleph:aleph_input_var(V,Type,VarTypes),
 	prefix_lits((Goal),GoalsSoFar,G1),
 	get_i_links(T,Lit,VarTypes,G1,Goals).
 
@@ -6673,7 +6675,7 @@ aleph_get_hlit(Name/Arity,Head,M):-
 	once(split_args(Mode,Mode,_,_,C,M)),
 	copy_modeterms(Mode,Head,Arity),
 	get_c_links(C,Head,true,Equalities),
-	Equalities.
+	M:Equalities.
 
 aleph_get_lit(Lit,[H|Lits],M):-
 	functor(H,Name,Arity),
@@ -6718,7 +6720,7 @@ auto_refine((H:-B),(H1:-B1),M):-
 	\+(M:prune((H1:-B1))),
 	\+(tautology((H1:-B1),M)),
 	(setting(language,Lang,M) ->
-		lang_ok(Lang,H1,B1,M);
+		lang_ok(Lang,H1,B1);
 		true),
 	(setting(newvars,NewVars,M) ->
 		newvars_ok(NewVars,H1,B1);
@@ -6746,7 +6748,7 @@ auto_extend((H:-B),Lit,(H1:-B1),M):-
         aleph_append([Lit],LitList,LitList1),
         list_to_goals(LitList1,(H1,B1)),
 	(setting(language,Lang,M) ->
-		lang_ok(Lang,H1,B1,M);
+		lang_ok(Lang,H1,B1);
 		true),
 	(setting(newvars,NewVars,M) ->
 		newvars_ok(NewVars,H1,B1);
@@ -7108,7 +7110,7 @@ legal_clause_using_modes(N,D,L-[0,0,[],Clause],M):-
 	\+(M:prune(Clause)),
 	split_clause(Clause,Head,Body),
 	(setting(language,Lang,M) ->
-        	lang_ok(Lang,Head,Body,M);
+        	lang_ok(Lang,Head,Body);
 		true),
 	(setting(newvars,NewVars,M) ->
 		newvars_ok(NewVars,Head,Body,M);
@@ -7405,7 +7407,7 @@ randclause_wo_repl(N,L,C,S,C1,M):-
 	\+(prune(C,M)),
 	split_clause(C,Head,Body),
 	(setting(language,Lang,M) ->
-		lang_ok(Lang,Head,Body,M);
+		lang_ok(Lang,Head,Body);
 		true),
 	(setting(newvars,NewVars,M) ->
 		newvars_ok(NewVars,Head,Body,M);
@@ -7753,7 +7755,7 @@ pp_dclause((H:-B),Pretty,M):-
                 write(' :-')),
         nl,
         M:'$aleph_global'(print,set(print,N)),
-        print_lits(Body,Pretty,1,N).
+        print_lits(Body,Pretty,1,N,M).
 
 pp_dclause((Lit),Pretty,M):-
         copy_term(Lit,Lit1),
@@ -9683,7 +9685,7 @@ reinstate(searchstate,M):-
 	retractall(M:'$aleph_global'(save,save(searchstate,_))).
 reinstate(Parameter,M):-
 	retract(M:'$aleph_global'(save,save(Parameter,Value))), !,
-	(Value = unknown -> noset(Parameter); set(Parameter,Value)).
+	(Value = unknown -> noset(Parameter,M); set(Parameter,Value,M)).
 reinstate(_,_M).
 
 % reinstate list of values of parameters
@@ -10023,7 +10025,7 @@ show(good,M):-
 show(features,M):-
         setting(evalfn,Evalfn,M),
 	(M:'$aleph_feature'(feature,_) -> true;
-		gen_features),
+		gen_features(M)),
         p_message('features from good clauses'),
 	M:'$aleph_feature'(feature,feature(Id,Label,_,Head,Body)),
 	show_stats(Evalfn,Label),
@@ -11007,7 +11009,7 @@ aleph_portray(hypothesis,true,_M):-
 aleph_portray(hypothesis,false,M):- 
 	p_message('hypothesis'),
 	hypothesis(Head,Body,_,M),
-	pp_dclause((Head:-Body,M)), !.
+	pp_dclause((Head:-Body),M), !.
 aleph_portray(_,hypothesis,_M):-  !.
 
 aleph_portray(search,true,_M):-

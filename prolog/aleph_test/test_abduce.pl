@@ -15,22 +15,4 @@ test(induce,[true(Program = [(parent(_658, _660):-father(_658, _660)), (parent(_
   induce(Program).
 
 :- end_tests(abduce).
-/*
-:- begin_tests(animals, []).
 
-:-ensure_loaded(library(examples/animals)).
-
-test(induce_tree):-
-  induce_tree.
-
-:- end_tests(animals).
-
-:- begin_tests(constraints, []).
-
-:-ensure_loaded(library(examples/constraints)).
-
-test(induce_constraints):-
-  induce_constraints(Constraints).
-
-:- end_tests(constraints).
-*/

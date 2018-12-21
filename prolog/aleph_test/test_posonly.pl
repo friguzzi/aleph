@@ -20,3 +20,4 @@ test(induce,[true(Program =
 
 :- end_tests(posonly).
 
+% not working

@@ -15,3 +15,4 @@ test(induce_constraints,[true(Program = [(parent(_658, _660):-father(_658, _660)
   induce_constraints(Program).
 
 :- end_tests(constraints).
+% not working

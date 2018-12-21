@@ -12,7 +12,7 @@ test_aleph:-
 :-ensure_loaded(library(examples/gcws)).
 
 test(induce):-
-  open('gwcs_in.txt',read,S),
+  open('gcws_in.txt',read,S),
   set_input(S),!,
   rdhyp,
   set_input(user_input),
@@ -21,22 +21,3 @@ test(induce):-
   close(S).
 
 :- end_tests(gcws).
-/*
-:- begin_tests(animals, []).
-
-:-ensure_loaded(library(examples/animals)).
-
-test(induce_tree):-
-  induce_tree.
-
-:- end_tests(animals).
-
-:- begin_tests(constraints, []).
-
-:-ensure_loaded(library(examples/constraints)).
-
-test(induce_constraints):-
-  induce_constraints(Constraints).
-
-:- end_tests(constraints).
-*/

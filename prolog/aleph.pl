@@ -32,12 +32,9 @@
 
 :- module(aleph,
 	  [ 
-	    aleph_read_all/0,
 	    read_all/1,
 		abducible/1,
-	    induce/0,
 		induce/1,
-		induce_tree/0,
 		induce_tree/1,
 		induce_max/0,
 		induce_max/1,
@@ -45,28 +42,20 @@
 		induce_cover/1,
 		induce_incremental/0,
 		induce_incremental/1,
-		induce_clauses/0,
 		induce_clauses/1,
 		induce_theory/0,
 		induce_theory/1,
-		induce_modes/0,
 		induce_modes/1,
 		induce_features/0,
 		induce_features/1,
-		induce_constraints/0,
 		induce_constraints/1,
 		rdhyp/0,
 		sphyp/0,
-		reduce/0,
 		reduce_and_show/1,
 		sat/1,
 		set/2,
 		setting/2,
 		model/1,
-		mode/2,
-		modeh/2,
-		modeb/2,
-		determination/2,
 		goals_to_list/2,
                 clause_to_list/2,
                 aleph_subsumes/2,
@@ -98,6 +87,13 @@ inf(1e10).
 :- meta_predicate induce_features(:).
 :- meta_predicate induce_constraints(:).
 :- meta_predicate reduce_and_show(:).
+:- meta_predicate sat(:).
+:- meta_predicate set(:,+).
+:- meta_predicate noset(:).
+:- meta_predicate mode(:,+).
+:- meta_predicate modeh(:).
+:- meta_predicate modeb(:).
+:- meta_predicate show(:).
 
 :- meta_predicate read_all(:).
 
@@ -145,21 +141,30 @@ system:term_expansion((:- aleph), []) :-
  '$aleph_search_seen'/2)),
   M:dynamic((prune/1,cost/3)),
   style_check(-discontiguous),
-  init(swi),
+  init(swi,M),
+  assert(M:(reduce:-reduce(_))),
+  assert(M:(induce_constraints:-induce_constraints(_))),
+  assert(M:(induce_modes:-induce_modes(_))),
+  assert(M:(induce_incremental:-induce_incremental(_))),
+  assert(M:(induce_clauses:-induce_clauses(_))),
+  assert(M:(induce:-induce(_))),
+  assert(M:(induce_tree:-induce_tree(_))),
 	clean_up(M),
 	reset(M).
 
 system:term_expansion((:- begin_bg), []) :-
+  prolog_load_context(module, M),
   input_mod(M),!,
   assert(M:bg_on).
 
 system:term_expansion(C, C) :-
   C\= (:- end_bg),
-	
+  prolog_load_context(module, M),	
   input_mod(M),
   M:bg_on,!.
 
 system:term_expansion((:- end_bg), []) :-
+  prolog_load_context(module, M),
   input_mod(M),!,
   retractall(M:bg_on).
   %findall(C,M:bgc(C),L),
@@ -172,19 +177,21 @@ system:term_expansion((:- end_bg), []) :-
  %   assert_all(L,M,_)
  % ).
 system:term_expansion((:- begin_in_pos), []) :-
+  prolog_load_context(module, M),
   input_mod(M),!,
   assert(M:pos_on),
   clean_up_examples(pos,M),
 	asserta(M:'$aleph_global'(size,size(pos,0))).
 	
 
-system:term_expansion(C, []) :-
-	
+system:term_expansion(C, []) :-	
   C\= (:- end_in_pos),
+  prolog_load_context(module, M),
   input_mod(M),
   M:pos_on,!,record_example(nocheck,pos,C,_,M).
 
 system:term_expansion((:- end_in_pos), []) :-
+  prolog_load_context(module, M),
   input_mod(M),!,
   retractall(M:pos_on),
   %findall(C,M:incpos(C),L),
@@ -206,18 +213,45 @@ system:term_expansion((:- end_in_pos), []) :-
 %%%%%%
 
 system:term_expansion((:- begin_in_neg), []) :-
+  prolog_load_context(module, M),
   input_mod(M),!,
   assert(M:neg_on),
 	clean_up_examples(neg,M),
 	asserta(M:'$aleph_global'(size,size(neg,0))).
 
 system:term_expansion(C, []) :-
-	
   C\= (:- end_in_neg),
+  prolog_load_context(module, M),
   input_mod(M),
   M:neg_on,!,record_example(nocheck,neg,C,_,M).
 
+system:term_expansion(:- mode(A,B), []) :-
+  prolog_load_context(module, M),
+  input_mod(M),!,
+  mode(A,B,M).
+
+system:term_expansion(:- modeh(A,B), []) :-
+  prolog_load_context(module, M),
+  input_mod(M),!,
+  modeh(A,B,M).
+
+system:term_expansion(:- modeb(A,B), []) :-
+  prolog_load_context(module, M),
+  input_mod(M),!,
+  modeb(A,B,M).
+
+system:term_expansion(:- set(A,B), []) :-
+  prolog_load_context(module, M),
+  input_mod(M),!,
+  set(A,B,M).
+
+system:term_expansion(:- determination(A,B), []) :-
+  prolog_load_context(module, M),
+  input_mod(M),!,
+  determination(A,B,M).
+
 system:term_expansion((:- end_in_neg), []) :-
+  prolog_load_context(module, M),
   input_mod(M),!,
   retractall(M:neg_on),
   %findall(C,M:incneg(C),L),
@@ -236,7 +270,20 @@ system:term_expansion((:- end_in_neg), []) :-
 %  ;
 %    assert(M:in(L))
 %  ).
-
+system:term_expansion((:- aleph_read_all), []) :-
+        prolog_load_context(module, M),
+	input_mod(M),
+	record_targetpred(M), 	
+	check_recursive_calls(M),
+	check_prune_defs(M),
+	check_user_search(M),
+	check_posonly(M),
+	check_auto_refine(M),
+	check_abducibles(M),
+	%Aggiunti alla fine
+	reset_counts(M),
+	asserta(M:'$aleph_global'(last_clause,last_clause(0))),
+	broadcast(examples(loaded)).
 %%%%%%%%
 
 assert_all([],_M,[]).
@@ -255,19 +302,7 @@ print_arr([]).
 print_arr([H|T]):-
 	write(H),print_arr(T),nl.
 	
-aleph_read_all :-
-	input_mod(M),
-	record_targetpred(M), 	
-	check_recursive_calls(M),
-	check_prune_defs(M),
-	check_user_search(M),
-	check_posonly(M),
-	check_auto_refine(M),
-	check_abducibles(M),
-	%Aggiunti alla fine
-	reset_counts(M),
-	asserta(M:'$aleph_global'(last_clause,last_clause(0))),
-	broadcast(examples(loaded)).
+
 
 /*
 theory_induce(Theory):-
@@ -304,8 +339,7 @@ init(yap):-
 	(predicate_property(delete_file(_),built_in) -> true;
 		assert_static(delete_file(_))).
 
-init(swi):-
-	input_mod(M),
+init(swi,M):-
 	%redefine_system_predicate(false),
 	style_check(+singleton),
 	style_check(-discontiguous),
@@ -3757,7 +3791,7 @@ cwinduce(M):-
         repeat,
 	M:'$aleph_global'(atoms_left,atoms_left(pos,[Num-X|Y])),
 	sat(Num,M),
-	reduce(M),
+	reduce(M:_),
 	retract(M:'$aleph_global'(hypothesis,hypothesis(Label,H,PCover,NCover))),
 	asserta(M:'$aleph_search'(sphyp,hypothesis(Label,H,PCover,NCover))),
         rm_seeds1(PCover,[Num-X|Y],NewPosLeft),
@@ -3927,8 +3961,7 @@ aleph_subsumes(Lits,Lits1):-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % S A T  /  R E D U C E
 
-sat(Num):-
-	input_mod(M),
+sat(M:Num):-
 	sat(Num,M).
 
 sat(Num,M):-
@@ -4015,11 +4048,7 @@ sat(_,_,M):-
 	noset(stage,M).
 
 
-reduce:-
-	input_mod(M),
-	reduce(M).
-
-reduce(M):-
+reduce(M:_):-
 	setting(search,Search,M), 
 	catch(reduce(Search,M),abort,reinstate_values), !.
 
@@ -4719,12 +4748,6 @@ collect(rls_restart,done(CPU, Nodes, selected(Best,RCl,PCov,NCov)),[T0,S], [T1,S
 
 % induce_clauses/0: the basic theory construction predicate
 % constructs theories 1 clause at a time
-induce_clauses:-
-	input_mod(M),
-	setting(interactive,true,M), !,
-	induce_incremental.
-induce_clauses:-
-	induce.
 
 induce_clauses(M:Program):-
 	setting(interactive,true,M), !,
@@ -4735,40 +4758,6 @@ induce_clauses(M:Program):-
 % induce/0: non-interactive theory construction
 % constructs theories 1 clause at a time
 % does greedy cover removal after each clause found
-induce:-
-	input_mod(M),
-	clean_up,
-	set(greedy,true,M),
-	retractall(M:'$aleph_global'(search_stats,search_stats(_,_))),
-        M:'$aleph_global'(atoms_left,atoms_left(pos,PosSet)),
-        PosSet \= [],
-	store(portray_search,M),
-	set(portray_search,false,M),
-        setting(samplesize,S,M),
-	setting(abduce,Abduce,M),
-	record_settings(M),
-        stopwatch(StartClock),
-        repeat,
-        gen_sample(pos,S,M),
-
-	retractall(M:'$aleph_global'(besthyp,besthyp(_,_,_,_,_))),
-        asserta(M:'$aleph_global'(besthyp,besthyp([-inf,0,1,-inf],0,(false),[],[]))),
-        get_besthyp(Abduce,M),
-        (setting(gcws,true,M) -> sphyp(M), addgcws(M); addhyp(M)),
-	show_atoms_left(M),
-	record_atoms_left(M),
-        M:'$aleph_global'(atoms_left,atoms_left(pos,[])),
-        stopwatch(StopClock),
-        Time is StopClock - StartClock,
-        show(theory,M),
-        record_theory(Time,M),
-	noset(greedy,M),
-	reinstate(portray_search,M),
-		
-        p1_message('time taken'), p_message(Time), 
-	show_total_stats(M),
-	record_total_stats(M), !.
-induce.
 
 % induce/1: non-interactive theory construction
 % constructs theories 1 clause at a time
@@ -5054,7 +5043,7 @@ induce_incremental:-
         	asserta(M:'$aleph_global'(example_selected,
 						example_selected(pos,N))),
 		once(sat(N,M)),
-		once(reduce(M)),
+		once(reduce(M:_)),
 		once(process_hypothesis(M)),
 		fail),
 	!,
@@ -5088,7 +5077,7 @@ induce_incremental(M:Program):-
         	asserta(M:'$aleph_global'(example_selected,
 						example_selected(pos,N))),
 		once(sat(N,M)),
-		once(reduce(M)),
+		once(reduce(M:_)),
 		once(process_hypothesis_web(M)),
 		fail),
 	!,
@@ -5162,23 +5151,7 @@ induce_theory(M:Program):-
 % Constraints that are ``nearly true'' can be obtained
 % by altering the noise setting
 % All constraints found are stored as `good clauses'.
-induce_constraints:-
-	input_mod(M),
-	clean_up(M),
-	retractall(M:'$aleph_global'(search_stats,search_stats(_,_))),
-	store_values([portray_search,search,construct_bottom,good,goodfile],M),
-	noset(goodfile,M),
-	set(portray_search,false,M),
-	set(construct_bottom,false,M),
-	set(search,ic,M),
-	set(good,true,M),
-	sat(uspec,0,M),
-	reduce,
-	show(constraints,M),
-	reinstate_values([portray_search,search,construct_bottom,good,goodfile],M),
-	show_total_stats(M),
-	record_total_stats(M), !.
-induce_constraints.
+
 
 induce_constraints(M:Constraints):-
 	clean_up(M),
@@ -5198,13 +5171,7 @@ induce_constraints(M:Constraints):-
 	record_total_stats(M), !.
 
 % induce_modes/0: search for an acceptable set of mode declarations
-induce_modes:-
-	input_mod(M),
-	clean_up(M),
-	store_values([typeoverlap],M),
-	search_modes(M),
-	reinstate_values([typeoverlap],M),
-	show(modes,M).
+
 
 induce_modes(M:Modes):-
 	clean_up(M),
@@ -5328,27 +5295,6 @@ induce_features(M:Features):-
 % Following work by F Provost and P Domingos, pruning is not employed
 % for class probability prediction.
 % Currently no pruning is performed for model trees.
-induce_tree:-
-	input_mod(M),
-	clean_up(M),
-	setting(tree_type,Type,M),
-	store_values([refine],M),
-	set(refine,auto,M),
-	setting(mingain,MinGain,M),
-	(MinGain =< 0.0 ->
-		err_message('inappropriate setting for mingain'),
-		fail;
-		true
-	),
-	record_settings(M),
-	stopwatch(StartClock),
-	construct_tree(Type,M),
-	stopwatch(StopClock),
-	Time is StopClock - StartClock,
-	show(theory,M),
-	record_theory(Time,M),
-	reinstate_values([refine],M), !.
-induce_tree.
 
 induce_tree(M:Program):-
 	clean_up(M),
@@ -9733,8 +9679,7 @@ bottom_key(N,T,Key,Flag,M):-
 		Key = false,
 		Flag = false).
 
-set(Variable,Value):-
-  input_mod(M),
+set(M:Variable,Value):-
   set(Variable,Value,M).
 
 
@@ -9750,8 +9695,7 @@ set(Variable,Value,M):-
 	broadcast(set(Variable,V)),
 	special_consideration(Variable,Value,M).
 
-setting(Variable,Value):-
-	input_mod(M),
+setting(M:Variable,Value):-
 	setting(Variable,Value,M).
 
 setting(Variable,Value,M):-
@@ -9760,6 +9704,9 @@ setting(Variable,Value,M):-
 	Value = Value1.
 setting(Variable,Value,_M):-
 	default_setting(Variable,Value).
+
+noset(M:Variable):-
+	noset(Variable,M).
 
 noset(Variable,M):-
 	nonvar(Variable),
@@ -9814,8 +9761,7 @@ model(Name/Arity,M):-
 positive_only(Name/Arity,M):-
 	assertz(M:'$aleph_global'(positive_only,positive_only(Name/Arity))).
 
-mode(Recall,Pred):-
-	input_mod(M),
+mode(M:Recall,Pred):-trace,
 	mode(Recall,Pred,M).
 
 mode(Recall,Pred,M):-
@@ -9831,8 +9777,7 @@ modes(N/A,Mode,M):-
         M:'$aleph_global'(modeb,Mode),
         functor(Pred,N,A).
 
-modeh(Recall,Pred):-
-	input_mod(M),
+modeh(M:Recall,Pred):-trace,
 	modeh(Recall,Pred,M).
 
 modeh(Recall,Pred,M):-
@@ -9843,8 +9788,7 @@ modeh(Recall,Pred,M):-
         	functor(Pred,Name,Arity),
         	update_backpreds(Name/Arity,M)).
 
-modeb(Recall,Pred):-
-	input_mod(M),
+modeb(M:Recall,Pred):-trace,
 	modeb(Recall,Pred,M).
 
 modeb(Recall,Pred,M):-
@@ -9890,8 +9834,7 @@ gen_feature(Feature,Label,Class,M):-
 	split_clause(Feature,Template,Body),
 	assertz(M:'$aleph_feature'(feature,feature(Id,Label,Class,Template,Body))).
 
-show(S):-
-	input_mod(M),
+show(M:S):-
 	show(S,M).
 
 show(settings,M):-
@@ -11095,7 +11038,6 @@ write_profile_data([]).
 sandbox:safe_primitive('$syspreds':current_module(_)).
 sandbox:safe_primitive('$syspreds':property_predicate(_,_)).
 sandbox:safe_primitive('$syspreds':define_or_generate(_)).
-sandbox:safe_primitive(aleph:aleph_read_all).
 sandbox:safe_primitive(aleph:aleph).
 sandbox:safe_primitive(aleph:abducible(_)).
 sandbox:safe_primitive(aleph:induce).
@@ -11112,9 +11054,7 @@ sandbox:safe_primitive(aleph:induce_clauses).
 sandbox:safe_primitive(aleph:induce_clauses(_)).
 sandbox:safe_primitive(aleph:induce_theory).
 sandbox:safe_primitive(aleph:induce_theory(_)).
-sandbox:safe_primitive(aleph:induce_modes).
 sandbox:safe_primitive(aleph:induce_modes(_)).
-sandbox:safe_primitive(aleph:induce_constraints).
 sandbox:safe_primitive(aleph:induce_constraints(_)).
 sandbox:safe_primitive(aleph:induce_features).
 sandbox:safe_primitive(aleph:induce_features(_)).

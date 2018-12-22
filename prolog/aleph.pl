@@ -3826,8 +3826,6 @@ cwinduce(_M).
 % to ensure example/3 remains a static predicate
 % alters search parameters accordingly
 gen_ab_examples(Ab/_,PCover,NCover,M):-
-	PosFile = '.alephtmp.f',
-	NegFile = '.alephtmp.n',
 	create_examples(PosFile,Ab,neg,NCover,pos,PCover1,M),
 	create_examples(NegFile,Ab,pos,PCover,neg,NCover1,M),
 	aleph_consult(PosFile,M),
@@ -3847,8 +3845,8 @@ gen_ab_examples(Ab/_,PCover,NCover,M):-
 % copy OldE examples of OldType to give NewE examples of NewType 
 % copy stored in File
 create_examples(File,Ab,OldT,OldE,NewT,[Next-Last],M):-
+        tmp_file_stream(utf8,File,Stream),
 	M:'$aleph_global'(last_example,last_example(NewT,OldLast)),
-	aleph_open(File,write,Stream),
 	set_output(Stream),
 	create_copy(OldE,OldT,NewT,Ab,OldLast,Last,M),
 	close(Stream),

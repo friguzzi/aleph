@@ -12,10 +12,12 @@ test_aleph:-
 :-ensure_loaded(library(examples/posonly)).
 
 test(induce,[true(Program = 
-  [(class(_1384, reptile):-has_covering(_1384, scales)),  
-  (class(_1534, fish):-has_gills(_1534)),  
-  (class(_1670, mammal):-has_covering(_1670, hair)),  
-  (class(_1820, bird):-has_covering(_1820, feathers))])]):-
+ [class(_,reptile),
+ (class(F,reptile):-has_legs(F,4)),
+ (class(G,fish):-has_covering(G,none)),
+ (class(H,mammal):-has_covering(H,hair)),
+ (class(I,bird):-has_covering(I,feathers))]
+ )]):-
   induce(Program).
 
 :- end_tests(posonly).

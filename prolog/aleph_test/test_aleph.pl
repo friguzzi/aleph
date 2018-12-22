@@ -83,9 +83,9 @@ test(induce):-
 :-ensure_loaded(library(examples/posonly)).
 
 test(induce,[true(Program = 
-  [class(E,reptile),
+  [class(_,reptile),
   (class(F,reptile):-has_legs(F,4)),
-  class(G,fish),
+  class(_,fish),
   (class(H,mammal):-has_covering(H,hair)),
   (class(I,bird):-has_covering(I,feathers))]
 )]

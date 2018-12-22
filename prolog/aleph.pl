@@ -370,10 +370,6 @@ init(swi,M):-
 	assert((system(X):- shell(X))),
 	assert((exists(X):- exists_file(X))), 
 	assert((aleph_reconsult(F):- consult(F))),
-	assert((aleph_consult(X):- aleph_open(X,read,S), repeat,
-			read(S,F), (F = end_of_file -> close(S), !;
-					assertz(F),fail))),
-
         (predicate_property(thread_local(_),built_in) -> true;
 		assert(thread_local(_))),
 	
@@ -384,6 +380,9 @@ aleph_background_predicate(Lit,M):-
 				predicate_property(M:Lit,P),
 				((P=interpreted);(P=built_in)), !.
 
+aleph_consult(X,M):- aleph_open(X,read,S), repeat,
+			read(S,F), (F = end_of_file -> close(S), !;
+					assertz(M:F),fail).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A L E P H
 
@@ -3831,8 +3830,8 @@ gen_ab_examples(Ab/_,PCover,NCover,M):-
 	NegFile = '.alephtmp.n',
 	create_examples(PosFile,Ab,neg,NCover,pos,PCover1,M),
 	create_examples(NegFile,Ab,pos,PCover,neg,NCover1,M),
-	aleph_consult(PosFile),
-	aleph_consult(NegFile),
+	aleph_consult(PosFile,M),
+	aleph_consult(NegFile,M),
         retractall(M:'$aleph_global'(atoms_left,_)),
         retractall(M:'$aleph_global'(size,_)),
         asserta(M:'$aleph_global'(atoms_left,atoms_left(pos,PCover1))),

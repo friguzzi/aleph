@@ -97,6 +97,7 @@ inf(1e10).
 
 :- meta_predicate read_all(:).
 
+
 /* INIT ALEPH */
 
 system:term_expansion((:- aleph), []) :-
@@ -369,13 +370,13 @@ init(swi,M):-
 
         (predicate_property(thread_local(_),built_in) -> true;
 		assert(thread_local(_))),
-	assert((aleph_background_predicate(Lit):-
-				predicate_property(Lit,P),
-				((P=interpreted);(P=built_in)), ! )),
+	
 	(predicate_property(delete_file(_),built_in) -> true;
 		assert(delete_file(_))).
 
-
+aleph_background_predicate(Lit,M):-
+				predicate_property(M:Lit,P),
+				((P=interpreted);(P=built_in)), !.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A L E P H
@@ -452,7 +453,7 @@ flatten(Depth,MaxDepth,Last,Last1,M):-
 	retractall(M:'$aleph_local'(flatten_num,_)),
 	asserta(M:'$aleph_local'(flatten_num,Last)),
 	M:'$aleph_sat_atom'(_,_),!,
-	(setting(permute_bottom,Permute) -> true; Permute = false,M),
+	(setting(permute_bottom,Permute) -> true; Permute = false),
 	flatten_atoms(Permute,Depth,MaxDepth,Last1,M).
 flatten(_,_,_,Last,M):-
 	retract(M:'$aleph_local'(flatten_num,Last)), !.
@@ -509,7 +510,7 @@ flatten_lits(Lit,CheckOArgs,Depth,Negated,Mode,Last,_,M):-
 	retract(M:'$aleph_local'(flatten_lits,OldLast)),
 	(CheckOArgs = true -> 
 		arg(3,Mode,Out),
-		get_vars(FAtom,Out,OVars,M),
+		get_vars(FAtom,Out,OVars),
 		(in_path(OVars,M) ->
 			add_new_lit(Depth,FAtom,Mode,OldLast,Negated,NewLast,M);
 			NewLast = OldLast) ;
@@ -528,7 +529,7 @@ flatten_lits(_,_,_,_,_,_,Last1,M):-
 %	or special terms denoting constants
 % 	variable numbers arising from variable splits are disallowed
 %	returns Input and Output variable numbers
-flatten_lit(Lit,mode(Mode,In,Out,Const,M),FAtom,IVars,OVars,M):-
+flatten_lit(Lit,mode(Mode,In,Out,Const),FAtom,IVars,OVars,M):-
 	functor(Mode,_,Arity),
 	once(copy_modeterms(Mode,FAtom,Arity)),
 	flatten_vars(In,Lit,FAtom,IVars,M),
@@ -657,8 +658,8 @@ update_lit(LitNum,false,FAtom,I,O,D,M):-
 update_lit(LitNum,Negated,FAtom,I,O,D,M):-
 	gen_nlitnum(LitNum,M),
 	add_litinfo(LitNum,Negated,FAtom,I,O,D,M), 
-	get_vars(FAtom,I,IVars,M),
-	get_vars(FAtom,O,OVars,M),
+	get_vars(FAtom,I,IVars),
+	get_vars(FAtom,O,OVars),
 	assertz(M:'$aleph_sat_ivars'(LitNum,K,IVars)),
 	assertz(M:'$aleph_sat_ovars'(LitNum,K,OVars)), !.
 
@@ -744,11 +745,11 @@ mark_lit(Lit,Depth,GetPreds,VSoFar,P1,V1,M):-
 	(GetPreds = false ->
 		P1 = [],
 		V1 = VSoFar;
-		get_vars(Atom,O,OVars,M),
+		get_vars(Atom,O,OVars),
 		update_list(OVars,VSoFar,V1),
 		get_predicates(D,V1,D1,M),
 		mark_lits(D1,Depth,false,[],_,VSoFar,_,M),
-		get_vars(Atom,I,IVars,M),
+		get_vars(Atom,I,IVars),
 		get_predecessors(IVars,[],P1,M)).
 
 % mark lits that produce outputs that are not used by any other literal
@@ -783,7 +784,7 @@ mark_redundant_lits(Lit,Last,M):-
 get_predicates([],_,[],_M).
 get_predicates([Lit|Lits],Vars,[Lit|T],M):-
 	M:'$aleph_sat_litinfo'(Lit,_,Atom,I,_,[]),
-	get_vars(Atom,I,IVars,M),
+	get_vars(Atom,I,IVars),
 	aleph_subset1(IVars,Vars), !,
 	get_predicates(Lits,Vars,T,M).
 get_predicates([_|Lits],Vars,T,M):-
@@ -893,7 +894,7 @@ rm_symmetric(_,_,M):-
 	M:'$aleph_global'(symmetric,_),
 	M:'$aleph_sat_litinfo'(Lit1,_,Pred1,[I1|T1],_,_),
 	is_symmetric(Pred1,Name,Arity,M),
-	get_vars(Pred1,[I1|T1],S1,M),
+	get_vars(Pred1,[I1|T1],S1),
 	M:'$aleph_sat_litinfo'(Lit2,_,Pred2,[I2|T2],_,_),
 	Lit1 \= Lit2,
 	is_symmetric(Pred2,Name,Arity,M),
@@ -1839,7 +1840,7 @@ get_theory_gain1(S,Theory,Last,Best,Pos,Neg,P,N,Best1,M):-
 	arg(32,S,Lang),
 	theory_lang_ok(Theory,Lang,M),
 	arg(38,S,NewVars),
-	theory_newvars_ok(Theory,NewVars,M),
+	theory_newvars_ok(Theory,NewVars),
 	arg(14,S,Depth),
 	arg(29,S,Time),
 	arg(34,S,Proof),
@@ -1851,7 +1852,7 @@ get_theory_gain1(S,Theory,Last,Best,Pos,Neg,P,N,Best1,M):-
 	length(Theory,L),
 	Label = [Correct,Incorrect,L],
 	complete_label(Evalfn,Theory,Label,Label1,M),
-	get_search_keys(heuristic,Label1,SearchKeys,M),
+	get_search_keys(heuristic,Label1,SearchKeys),
 	arg(6,S,Verbosity),
 	(Verbosity >= 1 -> p_message(Correct/Incorrect); true),
 	asserta(M:'$aleph_search_node'(Node1,Theory,[],0,PCvr,NCvr,[],0)),
@@ -1900,10 +1901,10 @@ get_gain1(S,Flag,C,CL,EMin/EL,Last,Best/Node,Path,L1,Pos,Neg,OVars,E,Best1,M):-
 	arg(32,S,Lang),
 	lang_ok((Head:-Body),Lang),
 	arg(38,S,NewVars),
-	newvars_ok((Head:-Body),NewVars,M),
+	newvars_ok((Head:-Body),NewVars),
 	arg(34,S,Proof),
 	arg(37,S,Optim),
-	rewrite_clause(Proof,Optim,(Head:-Body),(Head1:-Body1),M),
+	rewrite_clause(Proof,Optim,(Head:-Body),(Head1:-Body1)),
 	(Search = ic ->
 		PCvr = [],
 		Label = [_,_,CL],
@@ -1923,8 +1924,8 @@ get_gain1(S,Flag,C,CL,EMin/EL,Last,Best/Node,Path,L1,Pos,Neg,OVars,E,Best1,M):-
 		estimate_label(SampleSize,Label,Label0,M);
 		Label0 = Label),
 	complete_label(Evalfn,C,Label0,Label1,M),
-	compression_ok(Evalfn,Label1,M),
-        get_search_keys(SearchStrat,Label1,SearchKeys,M),
+	compression_ok(Evalfn,Label1),
+        get_search_keys(SearchStrat,Label1,SearchKeys),
         arg(6,S,Verbosity),
 	arg(10,S,LCost),
 	arg(11,S,LContra),
@@ -1985,7 +1986,7 @@ clause_ok(Clause,_,M):-
 	\+ lang_ok(Clause,Lang), !, fail.
 clause_ok(Clause,_,M):-
 	setting(newvars,NewVars,M),
-	\+ newvars_ok(Clause,NewVars,M), !, fail.
+	\+ newvars_ok(Clause,NewVars), !, fail.
 clause_ok(_,_,_M).
 
 % check to see if refinement has been produced before
@@ -2466,7 +2467,7 @@ get_max_negs(Noise/_,_,Noise).
 update_open_list([K1|K2],NodeRef,Label,M):-
 	assertz(M:'$aleph_search_gain'(K1,K2,NodeRef,Label)),
 	retract(M:'$aleph_search'(openlist,OpenList)),
-	uniq_insert(descending,[K1|K2],OpenList,List1,M),
+	uniq_insert(descending,[K1|K2],OpenList,List1),
 	asserta(M:'$aleph_search'(openlist,List1)).
 
 pos_ok(S,_,_,_,_,_,_M):-
@@ -2494,7 +2495,7 @@ pos_ok(S,_,[_,_,_,C1|_],[P,L],_,_,M):-
         arg(4,S,_/Evalfn),
 	arg(2,S,Explore),
 	((Evalfn = user; Explore = true) -> true;
-        	evalfn(Evalfn,[P,0,L],C2),
+        	evalfn(Evalfn,[P,0,L],C2,M),
 		best_value(Evalfn,S,[P,0,L,C2],Max,M),
         	Max > C1), !.
 
@@ -2668,9 +2669,9 @@ best_value(wracc,_,[P|_],Best,M):-
 	(M:'$aleph_search'(clauseprior,Total-[P1-pos,_]) ->
 		Best is P*(Total - P1)/(Total^2);
 		Best is 0.25), !.
-best_value(Evalfn,_,[P,_,L|Rest],Best,_M):-
+best_value(Evalfn,_,[P,_,L|Rest],Best,M):-
 	L1 is L + 1,	% need at least 1 extra literal to achieve best value
-	evalfn(Evalfn,[P,0,L1|Rest],Best).
+	evalfn(Evalfn,[P,0,L1|Rest],Best,M).
 
 
 get_nextbest(S,NodeRef,M):-
@@ -3756,7 +3757,7 @@ gcws(M):-
 		interval_count(PCover1,P1);
 		PCover1 = PCover,
 		P1 = P),
-	(NCover = _/_ -> label_create(neg,Clause,Label2),
+	(NCover = _/_ -> label_create(neg,Clause,Label2,M),
 		extract_neg(Label2,NCover1),
 		interval_count(NCover1,N1);
 		NCover1 = NCover,
@@ -4017,9 +4018,9 @@ sat(Type,Num,M):-
 	M:'$aleph_global'(i,set(i,Ival)),
 	flatten(0,Ival,0,Last1,M),
 	M:'$aleph_sat_litinfo'(1,_,Atom,_,_,_),
-	get_vars(Atom,Output,HeadOVars,M),
+	get_vars(Atom,Output,HeadOVars),
 	asserta(M:'$aleph_sat'(hovars,HeadOVars)),
-	get_vars(Atom,Input,HeadIVars,M),
+	get_vars(Atom,Input,HeadIVars),
 	asserta(M:'$aleph_sat'(hivars,HeadIVars)),
 	functor(Example,Name,Arity), 
 	get_determs(Name/Arity,L,M),
@@ -4838,7 +4839,7 @@ copy_features(Features,M):-
 copy_theory_eval(0,_,Label,M):-
 %	trace,
 	M:'$aleph_global'(hypothesis,hypothesis(_,Clause,_,_)), !,
-	label_create(Clause,Label),
+	label_create(Clause,Label,M),
 	p_message('Rule 0'),
 	pp_dclause(Clause,M),
 	extract_count(pos,Label,PC),
@@ -5083,7 +5084,7 @@ induce_constraints(M:Constraints):-
 	set(search,ic,M),
 	set(good,true,M),
 	sat(uspec,0,M),
-	reduce(M),
+	reduce(M:_),
 	copy_constraints(Constraints,M),
 	show(constraints,M),
 	reinstate_values([portray_search,search,construct_bottom,good,goodfile],M),
@@ -5234,7 +5235,7 @@ get_besthyp(AbduceFlag,M):-
 				example_selected(pos,Num))),
 	reset_best_label(M),	 % set-up target to beat
 	sat(Num,M),
-	reduce(M),
+	reduce(M:_),
 	update_besthyp(Num,M),
 	(AbduceFlag = true ->
         	M:example(Num,pos,Atom),
@@ -5645,7 +5646,7 @@ gen_abduced_atoms([AbAtom|AbAtoms],[AbGen|AbGens],M):-
 	functor(AbAtom,Name,Arity),
 	add_determinations(Name/Arity,true,M),
 	sat(AbAtom,M),
-	reduce(M),
+	reduce(M:_),
 	M:'$aleph_global'(hypothesis,hypothesis(_,AbGen,_,_)),
 	remove_explained(AbAtoms,AbGen,AbAtoms1,M),
 	gen_abduced_atoms(AbAtoms1,AbGens,M).
@@ -6945,7 +6946,7 @@ legal_clause_using_modes(N,D,L-[0,0,[],Clause],M):-
         	lang_ok(Lang,Head,Body);
 		true),
 	(setting(newvars,NewVars,M) ->
-		newvars_ok(NewVars,Head,Body,M);
+		newvars_ok(NewVars,Head,Body);
 		true),
 	!.
 legal_clause_using_modes(N,D,Clause,M):-
@@ -7037,7 +7038,7 @@ estimate_clauselength_scores(L,T,Evalfn,S1,S,M):-
 
 estimate_scores([],_,S,S,_M):- !.
 estimate_scores([L-[_,_,_,C]|Rest],Evalfn,S1,S,M):-
-	label_create(C,Label),
+	label_create(C,Label,M),
 	extract_count(pos,Label,PC),
 	extract_count(neg,Label,NC),
 	complete_label(Evalfn,C,[PC,NC,L],[_,_,_,Val|_],M),
@@ -7242,7 +7243,7 @@ randclause_wo_repl(N,L,C,S,C1,M):-
 		lang_ok(Lang,Head,Body);
 		true),
 	(setting(newvars,NewVars,M) ->
-		newvars_ok(NewVars,Head,Body,M);
+		newvars_ok(NewVars,Head,Body);
 		true),
 	\+(M:'$aleph_sat'(random,rselect(C1))), !,
 	asserta(M:'$aleph_sat'(random,rselect(C1))).
@@ -9899,7 +9900,7 @@ show(_,_M).
 
 reduce_and_show(M:S):-
 	sat(1,M),
-	reduce(M),
+	reduce(M:_),
 	show(S,M).
 settings(M):-
 	show(settings,M).
@@ -10948,7 +10949,6 @@ sandbox:safe_primitive(aleph:induce_constraints(_)).
 sandbox:safe_primitive(aleph:induce_features(_)).
 sandbox:safe_primitive(aleph:sat(_)).
 sandbox:safe_primitive(aleph:model(_)).
-sandbox:safe_primitive(aleph:reduce).
 sandbox:safe_primitive(aleph:reduce_and_show(_)).
 sandbox:safe_primitive(aleph:set(_,_)).
 sandbox:safe_primitive(aleph:mode(_,_)).

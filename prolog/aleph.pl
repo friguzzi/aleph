@@ -43,7 +43,6 @@
 		induce_modes/1,
 		induce_features/1,
 		induce_constraints/1,
-		reduce_and_show/1,
 		sat/1,
 		aleph_set/2,
 		aleph_setting/2,
@@ -98,7 +97,6 @@ inf(1e10).
 :- meta_predicate induce_modes(:).
 :- meta_predicate induce_features(:).
 :- meta_predicate induce_constraints(:).
-:- meta_predicate reduce_and_show(:).
 :- meta_predicate sat(:).
 :- meta_predicate aleph_set(:,+).
 :- meta_predicate aleph_settting(:,+).
@@ -9945,10 +9943,6 @@ show(test_neg,M):-
 	aleph_portray(test_neg,Pretty,M).
 show(_,_M).
 
-reduce_and_show(M:S):-
-	sat(1,M),
-	reduce(M:_),
-	show(S,M).
 settings(M):-
 	show(settings,M).
 

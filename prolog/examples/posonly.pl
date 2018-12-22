@@ -18,7 +18,7 @@
 :- use_rendering(prolog).
 :- endif.
 :- aleph.
-
+:- set_random(seed(111)).
 :- set(evalfn,posonly).
 :- set(clauselength,2).
 :- set(gsamplesize,20).

@@ -46,8 +46,8 @@
 		induce_constraints/1,
 		reduce_and_show/1,
 		sat/1,
-		set/2,
-		setting/2,
+		aleph_set/2,
+		aleph_setting/2,
 		model/1,
 		goals_to_list/2,
                 clause_to_list/2,
@@ -56,8 +56,21 @@
 		var_types/3,
 		show/1,
 		rdhyp/1,
+		addhyp_i/1,
 		sphyp/1,
 		sphyp_i/1,
+		covers/1,
+		coversn/1,
+		reduce/1,
+		abducible/1,
+		bottom/1,
+		commutative/1,
+		man/1,
+		symmetric/1,
+		lazy_evaluate/1,
+		model/1,
+		positive_only/1,
+		example_saturated/1,
 		addgcws_i/1,
 		rmhyp_i/1,
 		addgcws/1,
@@ -88,8 +101,8 @@ inf(1e10).
 :- meta_predicate induce_constraints(:).
 :- meta_predicate reduce_and_show(:).
 :- meta_predicate sat(:).
-:- meta_predicate set(:,+).
-:- meta_predicate settting(:,+).
+:- meta_predicate aleph_set(:,+).
+:- meta_predicate aleph_settting(:,+).
 :- meta_predicate noset(:).
 :- meta_predicate model(:).
 :- meta_predicate mode(:,+).
@@ -98,7 +111,21 @@ inf(1e10).
 :- meta_predicate show(:).
 :- meta_predicate hypothesis(:,+,-).
 :- meta_predicate rdhyp(:).
+:- meta_predicate addhyp_i(:).
 :- meta_predicate sphyp_i(:).
+:- meta_predicate covers(:).
+:- meta_predicate coversn(:).
+:- meta_predicate reduce(:).
+:- meta_predicate abducible(:).
+:- meta_predicate bottom(:).
+:- meta_predicate commutative(:).
+:- meta_predicate symmetric(:).
+:- meta_predicate lazy_evaluate(:).
+:- meta_predicate positive_only(:).
+:- meta_predicate example_saturated(:).
+
+
+
 :- meta_predicate addgcws_i(:).
 :- meta_predicate rmhyp_i(:).
 :- meta_predicate read_all(:).
@@ -116,7 +143,7 @@ system:term_expansion((:- aleph), []) :-
 	aleph_manual(Man),
 	write('Manual: '),
 	write(Man), nl, nl,
-	aleph_version(V), set(version,V), reset(M),
+	aleph_version(V), set(version,V,M), reset(M),
   %findall(local_setting(P,V),default_setting_sc(P,V),L),
   %assert_all(L,M,_),
 	M:dynamic((pos_on/0,neg_on/0,bg_on/0,incneg/1,incpos/1,in/1,bgc/1,bg/1)),
@@ -164,8 +191,12 @@ system:term_expansion((:- aleph), []) :-
   assert(M:(sphyp:-sphyp_i(_))),
   assert(M:(addgcws:-addgcws_i(_))),
   assert(M:(rmhyp:-rmhyp_i(_))),
-	clean_up(M),
-        reset(M).
+  assert(M:(addhyp:-addhyp_i(_))),
+  assert(M:(covers:-covers(_))),
+  assert(M:(coversn:-coversn(_))),
+
+  clean_up(M),
+  reset(M).
 
 
 system:term_expansion((:- begin_bg), []) :-
@@ -402,6 +433,9 @@ aleph_manual('http://www.comlab.ox.ac.uk/oucl/groups/machlearn/Aleph/index.html'
 :- multifile refine/2.
 :- multifile cost/3.
 :- multifile prove/2.
+:- multifile redundant/2.
+:- multifile text/2.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % C O N S T R U C T   B O T T O M
@@ -458,7 +492,7 @@ flatten(Depth,MaxDepth,Last,Last1,M):-
 	retractall(M:'$aleph_local'(flatten_num,_)),
 	asserta(M:'$aleph_local'(flatten_num,Last)),
 	M:'$aleph_sat_atom'(_,_),!,
-	(setting(permute_bottom,Permute) -> true; Permute = false),
+	(setting(permute_bottom,Permute,M) -> true; Permute = false),
 	flatten_atoms(Permute,Depth,MaxDepth,Last1,M).
 flatten(_,_,_,Last,M):-
 	retract(M:'$aleph_local'(flatten_num,Last)), !.
@@ -641,7 +675,7 @@ add_new_lit(Depth,FAtom,Mode,OldLast,Negated,NewLast,M):-
 % modify the literal database: check if performing lazy evaluation
 % of bottom clause, and update input and output terms in literal
 add_lit(Last,Negated,FAtom,I,O,_,_,Last,M):-
-	setting(construct_bottom,CBot),
+	setting(construct_bottom,CBot,M),
 	(CBot = false ; CBot = reduction), 
 	(Negated = true -> Lit = not(FAtom); Lit = FAtom),
 	M:'$aleph_sat_litinfo'(_,0,Lit,I,O,_), !.
@@ -9513,10 +9547,10 @@ reinstate(searchstate,M):-
 		asserta(M:'$aleph_global'(size,size(neg,NSize)));
 		true),
 	(M:'$aleph_global'(save,save(searchstate,set(noise,Noise))) ->
-		set(noise,Noise);
+		set(noise,Noise,M);
 		true),
 	(M:'$aleph_global'(save,save(searchstate,set(minacc,MinAcc))) ->
-		set(minacc,MinAcc);
+		set(minacc,MinAcc,M);
 		true),
 	retractall(M:'$aleph_global'(save,save(searchstate,_))).
 reinstate(Parameter,M):-
@@ -9569,7 +9603,7 @@ bottom_key(N,T,Key,Flag,M):-
 		Key = false,
 		Flag = false).
 
-set(M:Variable,Value):-
+aleph_set(M:Variable,Value):-
   set(Variable,Value,M).
 
 
@@ -9585,7 +9619,7 @@ set(Variable,Value,M):-
 	broadcast(set(Variable,V)),
 	special_consideration(Variable,Value,M).
 
-setting(M:Variable,Value):-
+aleph_setting(M:Variable,Value):-
 	setting(Variable,Value,M).
 
 setting(Variable,Value,M):-
@@ -9625,18 +9659,26 @@ determination(Pred1,Pred2,M):-
 		update_backpreds(Pred1,M);
 		true).
 
-abducible(Name/Arity):-
-	input_mod(M),
+abducible(M:Name/Arity):-
 	abducible(Name/Arity,M).
 
 abducible(Name/Arity,M):-
 	assertz(M:'$aleph_global'(abducible,abducible(Name/Arity))).
 
+commutative(M:Name/Arity):-
+	commutative(Name/Arity,M).
+
 commutative(Name/Arity,M):-
 	assertz(M:'$aleph_global'(commutative,commutative(Name/Arity))).
 
+symmetric(M:Name/Arity):-
+	symmetric(Name/Arity,M).
+
 symmetric(Name/Arity,M):-
 	assertz(M:'$aleph_global'(symmetric,symmetric(Name/Arity))).
+
+lazy_evaluate(M:Name/Arity):-
+	lazy_evaluate(Name/Arity,M).
 
 lazy_evaluate(Name/Arity,M):-
         assertz(M:'$aleph_global'(lazy_evaluate,lazy_evaluate(Name/Arity))).
@@ -9646,6 +9688,9 @@ model(M:Name/Arity):-
 
 model(Name/Arity,M):-
         assertz(M:'$aleph_global'(model,model(Name/Arity))).
+
+positive_only(M:Name/Arity):-
+	positive_only(Name/Arity,M).
 
 positive_only(Name/Arity,M):-
 	assertz(M:'$aleph_global'(positive_only,positive_only(Name/Arity))).
@@ -9921,6 +9966,9 @@ examples(_,_,_M).
 
 % bottom(-Clause)
 % 	returns current bottom clause
+bottom(M:Clause):-
+	bottom(Clause,M).
+
 bottom(Clause,M):-
 	M:'$aleph_sat'(lastlit,Last), 
 	get_clause(1,Last,[],ClauseList,M),
@@ -10078,7 +10126,7 @@ rmhyp(M):-
 rmhyp(_).
 
 
-covers(M):-
+covers(M:_):-
         get_hyp(Hypothesis,M),
         label_create(Hypothesis,Label,M),
         extract_cover(pos,Label,P),
@@ -10088,7 +10136,7 @@ covers(M):-
 	p_message(PC),
 	retractall(M:'$aleph_search'(covers,_)),
 	asserta(M:'$aleph_search'(covers,covers(P,PC))).
-coversn(M):-
+coversn(M:_):-
         get_hyp(Hypothesis,M),
         label_create(Hypothesis,Label,M),
         extract_cover(neg,Label,N),
@@ -10154,6 +10202,9 @@ coversn(NList,N,M):-
 	intervals_to_list(NCover,NList),
 	length(NList,N),
 	asserta(M:'$aleph_search'(coversn,coverns(NCover,N))).
+
+example_saturated(M:Example):-
+	example_saturated(Example,M).
 
 example_saturated(Example,M):-
 	M:'$aleph_sat'(example,example(Num,Type)),
@@ -10834,10 +10885,10 @@ get_hyp_label((_:-Body),[P,N,L],M):-
         nlits(Body,L1),
         L is L1 + 1,
         (M:'$aleph_search'(covers,covers(_,P))-> true;
-                        covers(_),
+                        covers(_,M),
                         M:'$aleph_search'(covers,covers(_,P))),
         (M:'$aleph_search'(coversn,coverns(_,N))-> true;
-                        coversn(_),
+                        coversn(_,M),
                         M:'$aleph_search'(coversn,coversn(_,N))).
  
 
@@ -10935,27 +10986,16 @@ write_profile_data([]).
 
 
 
-:- multifile sandbox:safe_primitive/1.
-sandbox:safe_primitive('$syspreds':current_module(_)).
-sandbox:safe_primitive('$syspreds':property_predicate(_,_)).
-sandbox:safe_primitive('$syspreds':define_or_generate(_)).
-sandbox:safe_primitive(aleph:abducible(_)).
-sandbox:safe_primitive(aleph:induce(_)).
-sandbox:safe_primitive(aleph:induce_tree(_)).
-sandbox:safe_primitive(aleph:induce_max(_)).
-sandbox:safe_primitive(aleph:induce_cover(_)).
-sandbox:safe_primitive(aleph:induce_incremental(_)).
-sandbox:safe_primitive(aleph:induce_clauses(_)).
-sandbox:safe_primitive(aleph:induce_theory(_)).
-sandbox:safe_primitive(aleph:induce_modes(_)).
-sandbox:safe_primitive(aleph:induce_constraints(_)).
-sandbox:safe_primitive(aleph:induce_features(_)).
-sandbox:safe_primitive(aleph:sat(_)).
-sandbox:safe_primitive(aleph:model(_)).
-sandbox:safe_primitive(aleph:reduce_and_show(_)).
-sandbox:safe_primitive(aleph:set(_,_)).
-sandbox:safe_primitive(aleph:mode(_,_)).
-sandbox:safe_primitive(aleph:modeh(_,_)).
-sandbox:safe_primitive(aleph:modeb(_,_)).
-sandbox:safe_primitive(aleph:determination(_,_)).
+:- multifile sandbox:safe_meta/2.
+
+sandbox:safe_meta(aleph:induce(_), []).
+sandbox:safe_meta(aleph:induce_tree(_), []).
+sandbox:safe_meta(aleph:induce_max(_), []).
+sandbox:safe_meta(aleph:induce_cover(_), []).
+sandbox:safe_meta(aleph:induce_incremental(_), []).
+sandbox:safe_meta(aleph:induce_clauses(_), []).
+sandbox:safe_meta(aleph:induce_theory(_), []).
+sandbox:safe_meta(aleph:induce_modes(_), []).
+sandbox:safe_meta(aleph:induce_constraints(_), []).
+sandbox:safe_meta(aleph:induce_features(_), []).
 

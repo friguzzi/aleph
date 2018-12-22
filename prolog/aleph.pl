@@ -3275,7 +3275,7 @@ find_tree(Type,M):-
 	p_message('constructing tree'),
 	stopwatch(StartClock),
 	get_search_settings(S,M),
-	auto_refine(false,Head,M),
+	auto_refine(aleph_false,Head,M),
 	gen_leaf(Leaf,M),
 	eval_treenode(S,Type,(Head:-true),[Argno],Pos,Examples,N,Cost,M),
 	asserta(M:'$aleph_search'(tree_leaf,l(Leaf,Leaf,[Head,Cost,N],Examples))),
@@ -3471,14 +3471,18 @@ add_model(Evalfn,Clause,PredictArg,Examples,_,_,_,M):-
 	Best is inf,
 	split_clause(Clause,Head,_),
 	tparg(PredictArg,Head,Var),
-	asserta(M:'$aleph_local'(tree_model,false,0,Best)),
+	asserta(M:'$aleph_local'(tree_model,aleph_false,0,Best)),
 	M:'$aleph_global'(model,model(Name/Arity)),
 	functor(Model,Name,Arity),
 	auto_extend(Clause,Model,C,M),
 	leaf_predicts(Arity,Model,Var),
 	lazy_evaluate_refinement([],C,[Name/Arity],Examples,[],[],C1,M),
 	find_model_error(Evalfn,Examples,C1,PredictArg,Total,Error,M),
+	pp_dclause(C1,M),
+	p1_message(error),
+	p1_message(Error),
 	M:'$aleph_local'(tree_model,_,_,BestSoFar),
+	p1_message(BestSoFar),
 	(Error < BestSoFar ->
 		retract(M:'$aleph_local'(tree_model,_,_,_)),
 		asserta(M:'$aleph_local'(tree_model,C1,Total,Error));
@@ -6532,7 +6536,12 @@ bvar_types([Lit|Lits],VTSoFar,BVarTypes,M):-
         \+ inconsistent_vartypes(OVarTypes,VTSoFar),
         aleph_append(OVarTypes,VTSoFar,VT1),
         bvar_types(Lits,VT1,BVarTypes,M).
-
+bvar_types([not(Lit)|Lits],VTSoFar,BVarTypes,M):-
+	M:'$aleph_has_vars'(Lit,IVarTypes,OVarTypes),
+        consistent_vartypes(IVarTypes,VTSoFar),
+        \+ inconsistent_vartypes(OVarTypes,VTSoFar),
+        aleph_append(OVarTypes,VTSoFar,VT1),
+        bvar_types(Lits,VT1,BVarTypes,M).
 consistent_vartypes([],_).
 consistent_vartypes([Var/Type|VarTypes],VTSoFar):-
         aleph_member2(Var/Type,VTSoFar),
@@ -6575,12 +6584,12 @@ aleph_mode_linked([Lit|Lits],LitsSoFar,M):-
 	aleph_append([Lit],LitsSoFar,L1),
 	aleph_mode_linked(Lits,L1,M).
 
-auto_refine(false,Head,M):-
+auto_refine(aleph_false,Head,M):-
 	example_saturated(Example,M), 
 	functor(Example,Name,Arity),
         aleph_get_hlit(Name/Arity,Head,M),
 	Head \== aleph_false.
-auto_refine(false,Head,M):-
+auto_refine(aleph_false,Head,M):-
         M:'$aleph_global'(modeh,modeh(_,Pred)),
 	functor(Pred,Name,Arity),
         aleph_get_hlit(Name/Arity,Head,M),
@@ -6618,6 +6627,24 @@ auto_refine(L,Clause1,Clause2,M):-
 auto_extend((H:-B),Lit,(H1:-B1),M):-
         !,
         goals_to_list((H,B),LitList),
+        setting(clauselength,L,M),
+        length(LitList,ClauseLength),
+        ClauseLength < L,
+        aleph_get_lit(Lit,LitList,M),
+        aleph_append([Lit],LitList,LitList1),
+        list_to_goals(LitList1,(H1,B1)),
+	(setting(language,Lang,M) ->
+		lang_ok(Lang,H1,B1);
+		true),
+	(setting(newvars,NewVars,M) ->
+		newvars_ok(NewVars,H1,B1);
+		true),
+	\+(tautology((H1:-B1),M)),
+	\+(M:prune((H1:-B1))).
+
+auto_extend((H),Lit,(H1:-B1),M):-
+        !,
+        goals_to_list(H,LitList),
         setting(clauselength,L,M),
         length(LitList,ClauseLength),
         ClauseLength < L,

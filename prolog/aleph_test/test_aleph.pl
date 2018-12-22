@@ -180,3 +180,13 @@ test(induce_tree,[true(Program =
 
 :- end_tests(weather).
 
+:- begin_tests(wedge, []).
+
+:-ensure_loaded(library(examples/wedge)).
+
+test(induce_tree,[true(Program = 
+[(f(_4526, _4528):-not(lteq(_4526, 0.0)), predict(_4526, _4528, [-1.0, 1.0, 0.0])),  (f(_4682, _4684):-lteq(_4682, 0.0), predict(_4682, _4684, [1.0, 1.0, 0.0]))]
+     )]):-
+  induce_tree(Program).
+
+:- end_tests(wedge).

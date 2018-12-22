@@ -30,7 +30,7 @@
 % adding more examples rectifies this: see wedge.f
 
 /** <examples>
-?- induce(Program).
+?- induce_tree(Program).
 */
 :-use_module(library(aleph)).
 :- if(current_predicate(use_rendering/1)).
@@ -47,6 +47,7 @@
 :- aleph_set(mingain,0.01).	% toy example needs this to be low
 :- aleph_set(dependent,2).	% second argument of f/2 is to predicted
 :- aleph_set(verbosity,10).
+%:- aleph_set(mingain,-1e10).
 
 % specify predicate definition to use for model construction
 :- model(predict/3).
@@ -134,7 +135,7 @@ abs_val(X,X):- X >= 0.
 
 f(-1.0,0.0).
 f(-0.5,0.5).
-% f(-0.25,0.75).	% adding this results in the correct theory
+ f(-0.25,0.75).	% adding this results in the correct theory
 f(0.0,1.0).
 f(0.5,0.5).
 f(1.0,0.0).

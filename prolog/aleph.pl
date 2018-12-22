@@ -4869,7 +4869,7 @@ copy_constraints(Constraints,M):-
 	findall(Clause,M:'$aleph_good'(_,_,Clause),Constraints).
 
 copy_features(Features,M):-
-	findall((Id,(Head:-Body)),M:'$aleph_feature'(feature,feature(Id,_,_,Head,Body)),Features).
+	findall((Head:-Body),M:'$aleph_feature'(feature,feature(_,_,_,Head,Body)),Features).
 
 % ============= UNUSED ====================
 copy_theory_eval(0,_,Label,M):-
@@ -10998,4 +10998,10 @@ sandbox:safe_meta(aleph:induce_modes(_), []).
 sandbox:safe_meta(aleph:induce_constraints(_), []).
 sandbox:safe_meta(aleph:induce_features(_), []).
 sandbox:safe_meta(aleph:abducible(_), []).
+sandbox:safe_meta(aleph:rdhyp(_), []).
+sandbox:safe_meta(aleph:sphyp_i(_), []).
+sandbox:safe_meta(aleph:show(_), []).
+sandbox:safe_meta(aleph:addgcws_i(_), []).
+sandbox:safe_meta(aleph:sat(_), []).
+sandbox:safe_meta(aleph:reduce(_), []).
 

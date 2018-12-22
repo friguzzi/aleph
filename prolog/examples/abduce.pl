@@ -23,7 +23,6 @@
 :- modeb(*,mother(+person,-person)).
 :- modeb(*,father(+person,-person)).
 :- modeb(*,parent(+person,-person)).
-%:- aleph_set(verbosity,0).
 :- aleph_set(abduce,true).
 :- abducible(parent/2).
 

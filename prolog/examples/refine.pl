@@ -13,8 +13,8 @@
 :- use_rendering(prolog).
 :- endif.
 :- aleph.
-:- set(i,2).
-:- set(verbose,1).
+:- aleph_set(i,2).
+:- aleph_set(verbose,1).
 
 :- modeh(1,eastbound(+train)).
 :- modeb(1,short(+car)).
@@ -261,7 +261,7 @@ load(car_102,rectangle,2).
 wheels(car_101,2).
 wheels(car_102,2).
 
-:- set(refine,user).
+:- aleph_set(refine,user).
 
 refine(false,eastbound(_)).
 refine(eastbound(X),(eastbound(X):-has_car(X,_))).

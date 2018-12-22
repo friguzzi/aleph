@@ -6,7 +6,7 @@
 %       c. induce_tree.
 
 /** <examples>
-?- induce_tree.
+?- induce_tree(T).
 */
 
 :-use_module(library(aleph)).

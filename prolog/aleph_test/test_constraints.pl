@@ -11,7 +11,12 @@ test_aleph:-
 
 :-ensure_loaded(library(examples/constraints)).
 
-test(induce_constraints,[true(Program = [(parent(_658, _660):-father(_658, _660)), (parent(_682, _684):-mother(_682, _684)), parent(dad(dad(bob)), mum(bob))])]):-
+test(induce_constraints,[true(Program = 
+  [(aleph_false:-human(E),male(E),female(E)),
+  (aleph_false:-human(F),female(F),male(F)),
+  (aleph_false:-human(G),not(male(G)),not(female(G))),
+  (aleph_false:-human(H),not(female(H)),not(male(H)))]
+  )]):-
   induce_constraints(Program).
 
 :- end_tests(constraints).

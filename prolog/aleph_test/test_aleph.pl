@@ -10,7 +10,10 @@ test_aleph:-
 
 :-ensure_loaded(library(examples/abduce)).
 
-test(induce,[true(Program = [(parent(_658, _660):-father(_658, _660)), (parent(_682, _684):-mother(_682, _684)), parent(dad(dad(bob)), mum(bob))])]):-
+test(induce,[true(Program = 
+  [(parent(_658, _660):-father(_658, _660)), 
+  (parent(_682, _684):-mother(_682, _684)), 
+  parent(dad(dad(bob)), mum(bob))])]):-
   induce(Program).
 
 :- end_tests(abduce).
@@ -25,6 +28,20 @@ test(induce_tree,[true(Program =
   induce_tree(Program).
 
 :- end_tests(animals).
+
+:- begin_tests(constraints, []).
+
+:-ensure_loaded(library(examples/constraints)).
+
+test(induce_constraints,[true(Program = 
+  [(aleph_false:-human(E),male(E),female(E)),
+  (aleph_false:-human(F),female(F),male(F)),
+  (aleph_false:-human(G),not(male(G)),not(female(G))),
+  (aleph_false:-human(H),not(female(H)),not(male(H)))]
+  )]):-
+  induce_constraints(Program).
+
+:- end_tests(constraints).
 
 :- begin_tests(features, []).
 
@@ -66,7 +83,11 @@ test(induce):-
 :-ensure_loaded(library(examples/posonly)).
 
 test(induce,[true(Program = 
-  [class(F,reptile),(class(G,fish):-has_gills(G)),class(H,mammal),(class(I,bird):-has_covering(I,feathers))]
+  [class(E,reptile),
+  (class(F,reptile):-has_legs(F,4)),
+  class(G,fish),
+  (class(H,mammal):-has_covering(H,hair)),
+  (class(I,bird):-has_covering(I,feathers))]
 )]
 
 %  [class(_,reptile),

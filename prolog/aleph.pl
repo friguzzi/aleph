@@ -4406,7 +4406,7 @@ find_clause(Search,M):-
 		
 		interval_count(P,MaxPC),
 		asserta(M:'$aleph_local'(max_head_count,MaxPC)),
-		StartClause = 0-[Num,Type,[],false],
+		StartClause = 0-[Num,Type,[],aleph_false],
                 get_gains(S,0,BestSoFar,StartClause,_,_,_,L,[StartClause],
 				P,N,[],1,Last,NextBest,M)),
         asserta(M:'$aleph_search_expansion'(1,0,1,Last)),
@@ -4835,7 +4835,7 @@ copy_modes(Modes,M):-
 	findall((M,D),M:'$aleph_global'(mode,mode(M,D)),Modes).
 
 copy_constraints(Constraints,M):-
-	findall((Label,Clause),M:'$aleph_good'(_,Label,Clause),Constraints).
+	findall(Clause,M:'$aleph_good'(_,_,Clause),Constraints).
 
 copy_features(Features,M):-
 	findall((Id,(Head:-Body)),M:'$aleph_feature'(feature,feature(Id,_,_,Head,Body)),Features).
@@ -6540,12 +6540,12 @@ auto_refine(false,Head,M):-
 	example_saturated(Example,M), 
 	functor(Example,Name,Arity),
         aleph_get_hlit(Name/Arity,Head,M),
-	Head \== false.
+	Head \== aleph_false.
 auto_refine(false,Head,M):-
         M:'$aleph_global'(modeh,modeh(_,Pred)),
 	functor(Pred,Name,Arity),
         aleph_get_hlit(Name/Arity,Head,M),
-	Head \== false.
+	Head \== aleph_false.
 auto_refine((H:-B),(H1:-B1),M):-
         !,
         goals_to_list((H,B),LitList),
@@ -6597,7 +6597,7 @@ auto_extend((H:-B),Lit,(H1:-B1),M):-
 tautology((aleph_false:-Body),M):-
 	!,
 	in(Body,L1,Rest,M),
-	in(Rest,not(L2)),
+	in(Rest,not(L2),M),
 	L1 == L2.
 tautology((Head:-Body),M):-
 	in(Body,Lit,M),
@@ -6962,7 +6962,7 @@ legal_clause_using_modes(_,_,1-[0,0,[],Clause],M):-
 	sample_clause_using_modes([1.0-1],1,Clause,M).
 
 sample_clause_using_modes(D,L,Clause,M):-
-	findall(H,auto_refine(false,H,M),HL),
+	findall(H,auto_refine(aleph_false,H,M),HL),
 	HL \= [],
 	random_select(Head,HL,_),
 	draw_element(D,L),
@@ -10166,7 +10166,7 @@ reset(M):-
 	clear_cache(M),
 	aleph_abolish('$aleph_global'/2,M),
 	aleph_abolish(example/3,M),
-	assert(M:example(0,uspec,false)),
+	assert(M:example(0,uspec,aleph_false)),
 	set_default(_,M),
 	!.
 

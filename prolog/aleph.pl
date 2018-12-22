@@ -1949,7 +1949,7 @@ get_gain1(S,Flag,C,CL,EMin/EL,Last,Best/Node,Path,L1,Pos,Neg,OVars,E,Best1,M):-
 		asserta(M:'$aleph_search'(label,label(Node1,Label)));
 		true),
         (((RefineOp \= false,Contradiction=false);
-		(arg(28,S,HOVars),clause_ok(Contradiction,HOVars,OVars2))) ->
+		(arg(28,S,HOVars),clause_ok1(Contradiction,HOVars,OVars2))) ->
                 update_best(S,C,PCvr,NCvr,Best/Node,Label1/Node1,Best1,M);
                 Best1=Best/Node),
 	!.
@@ -1963,7 +1963,7 @@ abandon_branch(S,C,M):-
         arg(6,S,Verbosity),
         (Verbosity >= 1 -> p_message(pruned); true).
 
-clause_ok(false,V1,V2):-
+clause_ok1(false,V1,V2):-
         aleph_subset1(V1,V2).
 
 % check to see if a clause is acceptable
@@ -1972,8 +1972,8 @@ clause_ok(false,V1,V2):-
 clause_ok(_,_,_M):-
 	false, !, fail.
 clause_ok(_,Label,M):-
-	extract_pos(Label,P,M),
-	extract_neg(Label,N,M),
+	extract_pos(Label,P),
+	extract_neg(Label,N),
 	Acc is P/(P+N),
 	setting(noise,Noise,M),
 	setting(minacc,MinAcc,M),
@@ -10106,7 +10106,7 @@ covers(P,M):-
 		M:'$aleph_global'(atoms,atoms(pos,Pos))),
 	label_create(Hypothesis,pos,Pos,Label,M),
 	retractall(M:'$aleph_search'(covers,_)),
-	extract_pos(Label,PCover,M),
+	extract_pos(Label,PCover),
 	interval_count(PCover,P),
 	asserta(M:'$aleph_search'(covers,covers(PCover,P))).
 

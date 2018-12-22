@@ -18,6 +18,7 @@ test(induce,[true(Program =
  (class(H,mammal):-has_covering(H,hair)),
  (class(I,bird):-has_covering(I,feathers))]
  )]):-
+  set_random(seed(111)),
   induce(Program).
 
 :- end_tests(posonly).

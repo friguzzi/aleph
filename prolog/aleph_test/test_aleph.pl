@@ -61,6 +61,26 @@ test(induce):-
 
 :- end_tests(gcws).
 
+:- begin_tests(posonly, []).
+
+:-ensure_loaded(library(examples/posonly)).
+
+test(induce,[true(Program = 
+  [class(F,reptile),(class(G,fish):-has_gills(G)),class(H,mammal),(class(I,bird):-has_covering(I,feathers))]
+)]
+
+%  [class(_,reptile),
+%  (class(F,reptile):-has_legs(F,4)),
+%  (class(G,fish):-has_covering(G,none)),
+%  (class(H,mammal):-has_covering(H,hair)),
+%  (class(I,bird):-has_covering(I,feathers))]
+%  )]
+ ):-
+  set_random(seed(111)),
+  induce(Program).
+
+:- end_tests(posonly).
+
 :- begin_tests(recursion, []).
 
 :-ensure_loaded(library(examples/recursion)).

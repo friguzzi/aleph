@@ -2298,11 +2298,11 @@ prove_examples(S,Flag,Contradiction,Entry,Best,CL,L2,Clause,Pos,Rand,PCover,RCov
                 prove_pos(S,Flag,Entry,Best,[PC,L2],Clause,Pos,PCover,PC,M),
                 prove_rand(S,Flag,Entry,Clause,Rand,RCover,RC,M)),
         find_posgain(PCover,P,M),
-        arg(16,S,M), arg(20,S,N),
+        arg(16,S,MM), arg(20,S,N),
         GC is (RC+1.0)/(N+2.0), % Laplace correction for small numbers
         A is log(P),
         B is log(GC),
-        G is GC*M/P,
+        G is GC*MM/P,
         C is CL/P,
         % Sz is CL*M/P,
         % D is M*G,

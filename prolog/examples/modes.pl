@@ -328,7 +328,7 @@ wheels(car_102,2).
 % :- aleph_set(portray_search,true).
 
 % :- [portray].
-
+/*
 portray(eastbound(A)):-
 	write('Train '), write(A),
 	write(' is eastbound').
@@ -375,7 +375,7 @@ portray(load(B,C,D)):-
 	write(' has '), write(D),
 	write(' '), write(C), write('-shaped load(s)').
 
-
+*/
 
 :-end_bg.
 :-begin_in_pos.

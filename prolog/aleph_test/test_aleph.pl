@@ -82,6 +82,8 @@ test(induce):-
 
 :- end_tests(gcws).
 
+
+
 :- begin_tests(posonly, []).
 
 :-ensure_loaded(library(examples/posonly)).
@@ -106,6 +108,35 @@ test(induce,[true(Program =
 
 :- end_tests(posonly).
 
+:- begin_tests(good, []).
+
+:-ensure_loaded(library(examples/good)).
+
+test(good,[true(C = 
+  [(eastbound(A) :-
+   has_car(A,B), closed(B), load(B,triangle,1)),
+  (eastbound(A) :-
+   has_car(A,B), short(B), closed(B))])
+  ]):-
+  sat(1),reduce,good_clauses(C).
+
+:- end_tests(good).
+
+:- begin_tests(modes, []).
+
+:-ensure_loaded(library(examples/modes)).
+
+test(induce_modes,[true(M = 
+  [mode(*,eastbound(+type1)),
+  mode(*,has_car(+type1,-type13)),
+  mode(*,short(+type13)),mode(*,closed(+type13)),mode(*,long(+type13)),mode(*,open_car(+type13)),mode(*,double(+type13)),mode(*,jagged(+type13)),mode(*,load(+type13,-type15,-type16)),mode(*,wheels(+type13,+type16)),mode(*,shape(+type13,-type9)),mode(1,+type1= #type1),mode(1,+type13= #type13),mode(1,+type15= #type15),mode(1,+type16= #type16),mode(1,+type9= #type9),mode(1,+type9= +type15),mode(1,not(short(+type13))),mode(1,not(closed(+type13))),mode(1,not(long(+type13))),mode(1,not(open_car(+type13))),mode(1,not(double(+type13))),mode(1,not(jagged(+type13))),mode(1,not(wheels(+type13,+type16)))]
+
+  
+  )]):-
+  induce_modes(M).
+
+:- end_tests(modes).
+
 :- begin_tests(recursion, []).
 
 :-ensure_loaded(library(examples/recursion)).
@@ -117,16 +148,26 @@ test(induce,[true(Program =
 
 :- end_tests(recursion).
 
-:- begin_tests(trains, []).
+:- begin_tests(refine, []).
 
-:-ensure_loaded(library(examples/trains)).
+:-ensure_loaded(library(examples/refine)).
+
+test(induce,[true(C = 
+  (eastbound(_4810):-has_car(_4810, _4822), short(_4822), closed(_4822)))]):-
+  sat(1),reduce(C).
+
+:- end_tests(refine).
+
+:- begin_tests(train, []).
+
+:-ensure_loaded(library(examples/train)).
 
 test(induce,[true(F =
   [(eastbound(_834):-has_car(_834, _846), short(_846), closed(_846))]
   )]):-
   induce(F).
 
-:- end_tests(trains).
+:- end_tests(train).
 
 :- begin_tests(weather, []).
 

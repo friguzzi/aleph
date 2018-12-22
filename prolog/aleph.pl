@@ -46,7 +46,6 @@
 		sat/1,
 		aleph_set/2,
 		aleph_setting/2,
-		model/1,
 		goals_to_list/2,
                 clause_to_list/2,
                 aleph_subsumes/2,
@@ -74,6 +73,10 @@
 		addgcws/1,
 		rmhyp/1,
 		random/2,
+		mode/2,
+		modeh/2,
+		modeb/2,
+		good_clauses/1,
 		op(500,fy,#),
 		op(500,fy,*),
 		op(900,xfy,because)
@@ -126,6 +129,7 @@ inf(1e10).
 :- meta_predicate addgcws_i(:).
 :- meta_predicate rmhyp_i(:).
 :- meta_predicate read_all(:).
+:- meta_predicate good_clauses(:).
 
 
 /* INIT ALEPH */
@@ -2174,7 +2178,7 @@ match_bot(reduction,Clause,Clause1,Lits,M):-
 	match_lazy_bottom(Clause,Lits,M),
 	get_pclause(Lits,[],Clause1,_,_,_,M).
 match_bot(saturation,Clause,Clause1,Lits,M):-
-	once(get_aleph_clause(Clause,AlephClause,M)),
+	once(get_aleph_clause(Clause,AlephClause)),
 	match_bot_lits(AlephClause,[],Lits,M),
 	get_pclause(Lits,[],Clause1,_,_,_,M).
 
@@ -2194,7 +2198,7 @@ match_bot_lit(Lit,LitNum,M):-
 	LitNum =< Last.
 
 match_lazy_bottom(Clause,Lits,M):-
-	once(get_aleph_clause(Clause,AlephClause,M)),
+	once(get_aleph_clause(Clause,AlephClause)),
 	copy_term(Clause,CClause),
 	split_clause(CClause,CHead,CBody),
 	example_saturated(CHead,M),
@@ -3470,7 +3474,7 @@ add_model(Evalfn,Clause,PredictArg,Examples,_,_,_,M):-
 	asserta(M:'$aleph_local'(tree_model,false,0,Best)),
 	M:'$aleph_global'(model,model(Name/Arity)),
 	functor(Model,Name,Arity),
-	auto_extend(Clause,Model,C),
+	auto_extend(Clause,Model,C,M),
 	leaf_predicts(Arity,Model,Var),
 	lazy_evaluate_refinement([],C,[Name/Arity],Examples,[],[],C1,M),
 	find_model_error(Evalfn,Examples,C1,PredictArg,Total,Error,M),
@@ -3490,7 +3494,7 @@ find_model_error(Evalfn,Examples,(Head:-Body),[PredictArg],T,E,M):-
 			(aleph_member(Interval,Examples),
 			aleph_member3(N,Interval),
 			M:example(N,pos,Example),
-			copy_iargs(Arity,Example,Head,PredictArg,M),
+			copy_iargs(Arity,Example,Head,PredictArg),
 			once(M:Body),
 			arg(PredictArg,Head,Pred), 
 			arg(PredictArg,Example,Actual)
@@ -4092,16 +4096,18 @@ sat(_,_,M):-
 	noset(stage,M).
 
 
-reduce(M:_):-
+reduce(M:Cl):-
 	setting(search,Search,M), 
-	catch(reduce(Search,M),abort,reinstate_values), !.
+	catch(reduce(Search,Cl,M),abort,reinstate_values), !.
 
+reduce(Search,M):-
+	reduce(Search,_Cl,M).
 % no search: add bottom clause as hypothesis
-reduce(false,M):-
+reduce(false,B,M):-
 	!,
-	add_bottom(M).
+	add_bottom(B,M).
 % iterative beam search as described by Ross Quinlan+MikeCameron-Jones,IJCAI-95
-reduce(ibs,M):-
+reduce(ibs,RClause,M):-
 	!,
 	retractall(M:'$aleph_search'(ibs_rval,_)),
 	retractall(M:'$aleph_search'(ibs_nodes,_)),
@@ -4157,7 +4163,7 @@ reduce(ibs,M):-
 	reinstate_values([openlist,caching,explore]).
 
 % iterative deepening search
-reduce(id,M):-
+reduce(id,RClause,M):-
 	!,
 	retractall(M:'$aleph_search'(id_nodes,_)),
 	retractall(M:'$aleph_search'(id_selected,_)),
@@ -4208,7 +4214,7 @@ reduce(id,M):-
 	reinstate_values([caching,clauselength],M).
 
 % iterative language search as described by Rui Camacho, 1996
-reduce(ils,M):-
+reduce(ils,RClause,M):-
 	!,
 	retractall(M:'$aleph_search'(ils_nodes,_)),
 	retractall(M:'$aleph_search'(ils_selected,_)), 
@@ -4273,7 +4279,7 @@ reduce(ils,M):-
 % GSAT if given a ``random-walk probability'' performs Selman et als walksat
 %	the walk probability is specified by set(walk,...)
 %	a walk probability of 0 is equivalent to doing standard GSAT
-reduce(rls,M):-
+reduce(rls,RBest,M):-
 	!,
 	setting(tries,MaxTries,M),
 	MaxTries >= 1,
@@ -4299,7 +4305,7 @@ reduce(rls,M):-
 
 % stochastic clause selection based on ordinal optimisation
 % see papers by Y.C. Ho and colleagues for more details
-reduce(scs,M):-
+reduce(scs,RBest,M):-
 	!,
 	store_values([tries,moves,rls_type,clauselength_distribution],M),
 	stopwatch(Start),
@@ -4343,7 +4349,7 @@ reduce(scs,M):-
 % For a much more sophisticated approach see: L. Dehaspe, PhD Thesis, 1998
 % Here, simply find all rules within search that cover at least
 % a pre-specificed fraction of the positive examples
-reduce(ar,M):-
+reduce(ar,Cl,M):-
 	!,
 	clear_cache(M),
 	(setting(pos_fraction,PFrac,M) -> true;
@@ -4364,13 +4370,14 @@ reduce(ar,M):-
 	asserta(M:'$aleph_global'(atoms_left,atoms_left(neg,[]))),
 	find_clause(bf,M),
 	show(good,M),
+	good_clauses(Cl,M),
 	retract(M:'$aleph_global'(atoms_left,atoms_left(neg,[]))),
 	asserta(M:'$aleph_global'(atoms_left,atoms_left(neg,Neg))),
 	reinstate_values([minpos,evalfn,explore,caching,minacc,good],M).
 
 % search for integrity constraints
 % modelled on the work by L. De Raedt and L. Dehaspe, 1996
-reduce(ic,M):-
+reduce(ic,Cl,M):-
 	!,
 	store_values([minpos,minscore,evalfn,explore,refineop],M),
 	setting(refineop,RefineOp,M),
@@ -4382,24 +4389,27 @@ reduce(ic,M):-
 	setting(noise,N,M),
 	MinScore is -N,
 	set(minscore,MinScore,M),
-	find_clause(bf,M),
+	find_clause(bf,Cl,M),
 	reinstate_values([minpos,minscore,evalfn,explore,refineop],M).
 
-reduce(bf,M):-
+reduce(bf,Cl,M):-
 	!,
-	find_clause(bf,M).
+	find_clause(bf,Cl,M).
 
-reduce(df,M):-
+reduce(df,Cl,M):-
 	!,
-	find_clause(df,M).
+	find_clause(df,Cl,M).
 
-reduce(heuristic,M):-
+reduce(heuristic,Cl,M):-
 	!,
-	find_clause(heuristic,M).
+	find_clause(heuristic,Cl,M).
 
 
 % find_clause(Search,M) where Search is one of bf, df, heuristic
 find_clause(Search,M):-
+	find_clause(Search,_Cl,M).
+
+find_clause(Search,RClause,M):-
 	set(stage,reduction,M),
 	set(searchstrat,Search,M),
 	p_message('reduce'),
@@ -4458,7 +4468,7 @@ find_clause(Search,M):-
 	record_search_stats(RClause,Nodes,Time,M),
 	noset(stage,M),
 	!.
-find_clause(_,M):-
+find_clause(_,RClause,M):-
         M:'$aleph_search'(selected,selected(BestLabel,RClause,PCover,NCover)),
 	retract(M:'$aleph_search'(openlist,_)),
 	add_hyp(BestLabel,RClause,PCover,NCover,M),
@@ -4861,7 +4871,7 @@ copy_theory_inner(ClauseNum,[SubProgram|TailP],M):-
 copy_theory_inner(0,[],_M).
 
 copy_modes(Modes,M):-
-	findall((M,D),M:'$aleph_global'(mode,mode(M,D)),Modes).
+	findall(mode(Mode,D),M:'$aleph_global'(mode,mode(Mode,D)),Modes).
 
 copy_constraints(Constraints,M):-
 	findall(Clause,M:'$aleph_good'(_,_,Clause),Constraints).
@@ -5134,7 +5144,7 @@ induce_modes(M:Modes):-
 	search_modes(M),
 	reinstate_values([typeoverlap],M),
 	copy_modes(Modes,M),
-	show(modes,M).
+	show(modes,M),!.
 
 % induce_features/0: search for interesting boolean features
 % each good clause found in a search constitutes a new boolean feature
@@ -5848,11 +5858,11 @@ collect_args([Argno/_|Args],Literal,M):-
 % when construct_bottom = false
 % currently do not check if user's definition of lazily evaluated
 % literal corresponds to recall number in the modes
-lazy_evaluate1(false,Atom,_,I,O,C,_,Lit,NewLits,_M):-
+lazy_evaluate1(false,Atom,_,I,O,C,_,Lit,NewLits,M):-
 	functor(Atom,Name,Arity),
 	p1_message('lazy evaluation'), p_message(Name),
 	functor(NewLit,Name,Arity),
-	findall(NewLit,(Lit,copy_args(Lit,NewLit,C)),NewLits),
+	findall(NewLit,(M:Lit,copy_args(Lit,NewLit,C)),NewLits),
 	copy_io_args(NewLits,Atom,I,O).
 
 lazy_evaluate1(true,Atom,Depth,I,O,_,D,Lit,NewLits,M):-
@@ -5878,7 +5888,7 @@ call_library_pred(OldLit,Depth,Lit,I,O,D,M):-
 evaluate(OldLit,_,Lit,I,O,D,M):-
 	functor(OldLit,Name,Arity),
 	functor(NewLit,Name,Arity),
-	Lit,
+	M:Lit,
 	copy_args(OldLit,NewLit,I),
 	copy_args(OldLit,NewLit,O),
 	copy_consts(Lit,NewLit,Arity),
@@ -6671,10 +6681,9 @@ tautology((Head:-Body),M):-
 % All very complicated: there must be a simpler approach.
 % Requires generative background predicates.
 
-search_modes:-
-	aleph_input_mod(M),
+search_modes(M):-
 	M:'$aleph_global'(targetpred,targetpred(N/A)),
-	findall(N1/A1,determinations(N/A,N1/A1),L),
+	findall(N1/A1,determinations(N/A,N1/A1,M),L),
 	number_types([N/A|L],0,TypedPreds,Last),
 	get_type_elements(TypedPreds,M),
 	interval_to_list(1-Last,Types),
@@ -6685,12 +6694,12 @@ search_modes:-
 	infer_modes(TypedPreds,Thresh,Types,Modes,M),
 	infer_equalities(EqModes,M),
 	Modes = [_|BodyModes],
-	infer_negations(BodyModes,NegModes,M),
+	infer_negations(BodyModes,NegModes),
 	(setting(updateback,Update,M) -> true; Update = true),
 	p_message('found modes'),
-	add_inferred_modes(Modes,Update),
-	add_inferred_modes(EqModes,Update),
-	add_inferred_modes(NegModes,Update),
+	add_inferred_modes(Modes,Update,M),
+	add_inferred_modes(EqModes,Update,M),
+	add_inferred_modes(NegModes,Update,M),
 	fail.
 search_modes(_M).
 
@@ -6798,7 +6807,7 @@ infer_ordered_modes(L,Thresh,Loc,Seen,Left,[Mode|Rest],M):-
 	infer_mode(Pred,Thresh,Loc,Seen,Mode,Seen1,M),
 	aleph_delete(Pred,L,L1),
 	aleph_delete_list(Seen1,Left,Left1),
-	infer_ordered_modes(L1,Thresh,Loc,Seen1,Left1,Rest).
+	infer_ordered_modes(L1,Thresh,Loc,Seen1,Left1,Rest,M).
 
 score_modes([],_,_,_,[],_M).
 score_modes([Pred|Preds],Thresh,Seen,Left,[Cost-Pred|Rest],M):-
@@ -6899,11 +6908,11 @@ grounding_equality((+N1 = #N1),M):-
 	M:'$aleph_search'(modes,typemapped(T1,_,T1)),
 	concat([type,T1],N1).
 
-add_inferred_modes([],_).
-add_inferred_modes([Mode|Modes],Flag):-
+add_inferred_modes([],_,_M).
+add_inferred_modes([Mode|Modes],Flag,M):-
 	write(Mode), nl,
-	(Flag = true -> Mode; true),
-	add_inferred_modes(Modes,Flag).
+	(Flag = true -> M:Mode; true),
+	add_inferred_modes(Modes,Flag,M).
 	
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -9367,7 +9376,6 @@ read_examples(Pos,Neg,M):-
 
 aleph_read_pos_examples(Type,M) :-
 	broadcast(background(loaded)),
-	%aleph_input_mod(M),!,
 	clean_up_examples(Type,M),
 	asserta(M:'$aleph_global'(size,size(Type,0))),
 	M:'$aleph_global'(size,size(Type,N)),
@@ -9376,7 +9384,6 @@ aleph_read_pos_examples(Type,M) :-
 	asserta(M:'$aleph_global'(atoms_left,atoms_left(Type,Ex))),
 	asserta(M:'$aleph_global'(last_example,last_example(Type,N))).
 aleph_read_neg_examples(Type,M) :-
-	%aleph_input_mod(M),!,
 	clean_up_examples(Type,M),
 	asserta(M:'$aleph_global'(size,size(Type,0))),
 	/*
@@ -9642,10 +9649,6 @@ man(M):-
 determinations(Pred1,Pred2,M):-
         M:'$aleph_global'(determination,determination(Pred1,Pred2)).
 
-determination(Pred1,Pred2):-
-	aleph_input_mod(M),
-	determination(Pred1,Pred2,M).
-
 determination(Pred1,Pred2,M):-
 	nonvar(Pred1),
 	M:'$aleph_global'(determination,determination(Pred1,Pred2)), !.
@@ -9692,7 +9695,7 @@ positive_only(M:Name/Arity):-
 positive_only(Name/Arity,M):-
 	assertz(M:'$aleph_global'(positive_only,positive_only(Name/Arity))).
 
-mode(M:Recall,Pred):-trace,
+mode(M:Recall,Pred):-
 	mode(Recall,Pred,M).
 
 mode(Recall,Pred,M):-
@@ -9708,7 +9711,7 @@ modes(N/A,Mode,M):-
         M:'$aleph_global'(modeb,Mode),
         functor(Pred,N,A).
 
-modeh(M:Recall,Pred):-trace,
+modeh(M:Recall,Pred):-
 	modeh(Recall,Pred,M).
 
 modeh(Recall,Pred,M):-
@@ -9719,7 +9722,7 @@ modeh(Recall,Pred,M):-
         	functor(Pred,Name,Arity),
         	update_backpreds(Name/Arity,M)).
 
-modeb(M:Recall,Pred):-trace,
+modeb(M:Recall,Pred):-
 	modeb(Recall,Pred,M).
 
 modeb(Recall,Pred,M):-
@@ -9946,6 +9949,15 @@ show(_,_M).
 settings(M):-
 	show(settings,M).
 
+good_clauses(M:GC):-
+	good_clauses(GC,M).
+
+good_clauses(GC,M):-
+        (setting(minscore,FMin,M) -> true; FMin is -inf),
+	findall(Clause,
+		(M:'$aleph_good'(_,Label,Clause),
+		Label = [_,_,_,F|_],
+		F >= FMin),GC).
 
 % examples(?Type,?List)
 % show all examples numbers in List of Type
@@ -10064,7 +10076,7 @@ addhyp(M):-
 % add bottom clause as hypothesis
 %	provided minacc, noise and search constraints are met
 %	otherwise the example saturated is added as hypothesis
-add_bottom(M):-
+add_bottom(Bottom,M):-
 	retractall(M:'$aleph_search'(selected,selected(_,_,_,_))),
 	bottom(Bottom,M),
 	add_hyp(Bottom,M),
@@ -10998,4 +11010,7 @@ sandbox:safe_meta(aleph:show(_), []).
 sandbox:safe_meta(aleph:addgcws_i(_), []).
 sandbox:safe_meta(aleph:sat(_), []).
 sandbox:safe_meta(aleph:reduce(_), []).
+sandbox:safe_meta(aleph:good_clauses(_), []).
+
+
 

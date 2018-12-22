@@ -6,7 +6,7 @@
 %       c. sat(1).
 %       d. reduce.
 /** <examples>
-?- induce(Program).
+?- sat(1),reduce(C).
 */
 :- use_module(library(aleph)).
 :- if(current_predicate(use_rendering/1)).
@@ -263,7 +263,7 @@ wheels(car_102,2).
 
 :- aleph_set(refine,user).
 
-refine(false,eastbound(_)).
+refine(aleph_false,eastbound(_)).
 refine(eastbound(X),(eastbound(X):-has_car(X,_))).
 refine(eastbound(X),(eastbound(X):-has_car(X,Y),short(Y))).
 refine((eastbound(X):-has_car(X,Y),short(Y)),Clause):-

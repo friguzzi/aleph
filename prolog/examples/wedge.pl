@@ -46,6 +46,7 @@
 :- aleph_set(minpos,2).       % minimum examples in leaf for splitting
 :- aleph_set(mingain,0.01).	% toy example needs this to be low
 :- aleph_set(dependent,2).	% second argument of f/2 is to predicted
+:- aleph_set(verbosity,10).
 
 % specify predicate definition to use for model construction
 :- model(predict/3).
@@ -68,7 +69,7 @@ threshold(-0.5).
 threshold(0.0).
 threshold(0.5).
 
-params([Slope,Constant,Sd]).
+params([_Slope,_Constant,_Sd]).
 
 list([_|_]).
 

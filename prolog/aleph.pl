@@ -57,6 +57,9 @@
 		show/1,
 		rdhyp/1,
 		sphyp/1,
+		sphyp_i/1,
+		addgcws_i/1,
+		rmhyp_i/1,
 		addgcws/1,
 		rmhyp/1,
 		random/2,
@@ -94,7 +97,10 @@ inf(1e10).
 :- meta_predicate modeb(:,+).
 :- meta_predicate show(:).
 :- meta_predicate hypothesis(:,+,-).
-
+:- meta_predicate rdhyp(:).
+:- meta_predicate sphyp_i(:).
+:- meta_predicate addgcws_i(:).
+:- meta_predicate rmhyp_i(:).
 :- meta_predicate read_all(:).
 
 
@@ -10790,7 +10796,7 @@ add_hyp(Clause,M):-
         retractall(M:'$aleph_global'(hypothesis,hypothesis(_,_,_,_))),
         extract_pos(Label,P),
         extract_neg(Label,N),
-	setting(evalfn,Evalfn),
+	setting(evalfn,Evalfn,M),
 	complete_label(Evalfn,Clause,[PCount,NCount,L],Label1,M),
         asserta(M:'$aleph_global'(hypothesis,hypothesis(Label1,Clause,P,N))).
 

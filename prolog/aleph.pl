@@ -4576,7 +4576,7 @@ reduce_prelims(L,P,N,M):-
 		L = 0, asserta(M:'$aleph_sat'(lastlit,L))),
 	(M:'$aleph_sat'(botsize,_B) -> true;
 		B = 0, asserta(M:'$aleph_sat'(botsize,B))),
-        ((M:'$aleph_global'(lazy_evaluate,lazy_evaluate(_));setting(greedy,true))->
+        ((M:'$aleph_global'(lazy_evaluate,lazy_evaluate(_));setting(greedy,true,M))->
                 M:'$aleph_global'(atoms_left,atoms_left(pos,P));
                 M:'$aleph_global'(atoms,atoms(pos,P))),
 	setting(evalfn,E,M),

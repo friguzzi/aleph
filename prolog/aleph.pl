@@ -33,7 +33,6 @@
 :- module(aleph,
 	  [ 
 	    read_all/1,
-		abducible/1,
 		induce/1,
 		induce_tree/1,
 		induce_max/1,
@@ -87,7 +86,7 @@
 :- arithmetic_function(inf/0).
 inf(1e10).
 :-set_prolog_flag(unknown,warning).
-:- dynamic input_mod/1.
+:- dynamic aleph_input_mod/1.
 
 :- meta_predicate induce(:).
 :- meta_predicate induce_tree(:).
@@ -135,15 +134,15 @@ inf(1e10).
 
 system:term_expansion((:- aleph), []) :-
   prolog_load_context(module, M),
-  assert(input_mod(M)),
-	nl, nl,
-	write('A L E P H'), nl,
-	aleph_version(Version), write('Version '), write(Version), nl,
-	aleph_version_date(Date), write('Last modified: '), write(Date), nl, nl,
-	aleph_manual(Man),
-	write('Manual: '),
-	write(Man), nl, nl,
-	aleph_version(V), set(version,V,M), reset(M),
+  assert(aleph_input_mod(M)),
+	% nl, nl,
+	% write('A L E P H'), nl,
+	% aleph:aleph_version(Version), write('Version '), write(Version), nl,
+	% aleph:aleph_version_date(Date), write('Last modified: '), write(Date), nl, nl,
+	% aleph:aleph_manual(Man),
+	% write('Manual: '),
+	% write(Man), nl, nl,
+	aleph:aleph_version(V), aleph:set(version,V,M), aleph:reset(M),
   %findall(local_setting(P,V),default_setting_sc(P,V),L),
   %assert_all(L,M,_),
 	M:dynamic((pos_on/0,neg_on/0,bg_on/0,incneg/1,incpos/1,in/1,bgc/1,bg/1)),
@@ -175,7 +174,7 @@ system:term_expansion((:- aleph), []) :-
  '$aleph_search_seen'/2)),
   M:dynamic((prune/1,cost/3)),
   style_check(-discontiguous),
-  init(swi,M),
+  aleph:init(swi,M),
   assert(M:(reduce:-reduce(_))),
   assert(M:(induce_constraints:-induce_constraints(_))),
   assert(M:(induce_modes:-induce_modes(_))),
@@ -195,24 +194,24 @@ system:term_expansion((:- aleph), []) :-
   assert(M:(covers:-covers(_))),
   assert(M:(coversn:-coversn(_))),
 
-  clean_up(M),
-  reset(M).
+  aleph:clean_up(M),
+  aleph:reset(M).
 
 
 system:term_expansion((:- begin_bg), []) :-
   prolog_load_context(module, M),
-  input_mod(M),!,
+  aleph_input_mod(M),!,
   assert(M:bg_on).
 
 system:term_expansion(C, C) :-
   C\= (:- end_bg),
   prolog_load_context(module, M),	
-  input_mod(M),
+  aleph_input_mod(M),
   M:bg_on,!.
 
 system:term_expansion((:- end_bg), []) :-
   prolog_load_context(module, M),
-  input_mod(M),!,
+  aleph_input_mod(M),!,
   retractall(M:bg_on).
   %findall(C,M:bgc(C),L),
   %retractall(M:bgc(_)),
@@ -225,7 +224,7 @@ system:term_expansion((:- end_bg), []) :-
  % ).
 system:term_expansion((:- begin_in_pos), []) :-
   prolog_load_context(module, M),
-  input_mod(M),!,
+  aleph_input_mod(M),!,
   assert(M:pos_on),
   clean_up_examples(pos,M),
 	asserta(M:'$aleph_global'(size,size(pos,0))).
@@ -234,12 +233,12 @@ system:term_expansion((:- begin_in_pos), []) :-
 system:term_expansion(C, []) :-	
   C\= (:- end_in_pos),
   prolog_load_context(module, M),
-  input_mod(M),
+  aleph_input_mod(M),
   M:pos_on,!,record_example(nocheck,pos,C,_,M).
 
 system:term_expansion((:- end_in_pos), []) :-
   prolog_load_context(module, M),
-  input_mod(M),!,
+  aleph_input_mod(M),!,
   retractall(M:pos_on),
   %findall(C,M:incpos(C),L),
   %retractall(M:incpos(_)),
@@ -261,45 +260,45 @@ system:term_expansion((:- end_in_pos), []) :-
 
 system:term_expansion((:- begin_in_neg), []) :-
   prolog_load_context(module, M),
-  input_mod(M),!,
+  aleph_input_mod(M),!,
   assert(M:neg_on),
-	clean_up_examples(neg,M),
+	aleph:clean_up_examples(neg,M),
 	asserta(M:'$aleph_global'(size,size(neg,0))).
 
 system:term_expansion(C, []) :-
   C\= (:- end_in_neg),
   prolog_load_context(module, M),
-  input_mod(M),
-  M:neg_on,!,record_example(nocheck,neg,C,_,M).
+  aleph_input_mod(M),
+  M:neg_on,!,aleph:record_example(nocheck,neg,C,_,M).
 
 system:term_expansion(:- mode(A,B), []) :-
   prolog_load_context(module, M),
-  input_mod(M),!,
-  mode(A,B,M).
+  aleph_input_mod(M),!,
+  aleph:mode(A,B,M).
 
 system:term_expansion(:- modeh(A,B), []) :-
   prolog_load_context(module, M),
-  input_mod(M),!,
-  modeh(A,B,M).
+  aleph_input_mod(M),!,
+  aleph:modeh(A,B,M).
 
 system:term_expansion(:- modeb(A,B), []) :-
   prolog_load_context(module, M),
-  input_mod(M),!,
-  modeb(A,B,M).
+  aleph_input_mod(M),!,
+  aleph:modeb(A,B,M).
 
-system:term_expansion(:- set(A,B), []) :-
+system:term_expansion(:- aleph_set(A,B), []) :-
   prolog_load_context(module, M),
-  input_mod(M),!,
-  set(A,B,M).
+  aleph_input_mod(M),!,
+  aleph:set(A,B,M).
 
 system:term_expansion(:- determination(A,B), []) :-
   prolog_load_context(module, M),
-  input_mod(M),!,
-  determination(A,B,M).
+  aleph_input_mod(M),!,
+  aleph:determination(A,B,M).
 
 system:term_expansion((:- end_in_neg), []) :-
   prolog_load_context(module, M),
-  input_mod(M),!,
+  aleph_input_mod(M),!,
   retractall(M:neg_on),
   %findall(C,M:incneg(C),L),
   %retractall(M:incneg(_)),
@@ -319,16 +318,16 @@ system:term_expansion((:- end_in_neg), []) :-
 %  ).
 system:term_expansion((:- aleph_read_all), []) :-
         prolog_load_context(module, M),
-	input_mod(M),
-	record_targetpred(M), 	
-	check_recursive_calls(M),
-	check_prune_defs(M),
-	check_user_search(M),
-	check_posonly(M),
-	check_auto_refine(M),
-	check_abducibles(M),
+	aleph_input_mod(M),
+	aleph:record_targetpred(M), 	
+	aleph:check_recursive_calls(M),
+	aleph:check_prune_defs(M),
+	aleph:check_user_search(M),
+	aleph:check_posonly(M),
+	aleph:check_auto_refine(M),
+	aleph:check_abducibles(M),
 	%Aggiunti alla fine
-	reset_counts(M),
+	aleph:reset_counts(M),
 	asserta(M:'$aleph_global'(last_clause,last_clause(0))),
 	broadcast(examples(loaded)).
 %%%%%%%%
@@ -353,7 +352,7 @@ print_arr([H|T]):-
 
 /*
 theory_induce(Theory):-
-	input_mod(M),
+	aleph_input_mod(M),
 	induce,
 	show(Theory).
 */
@@ -424,7 +423,7 @@ aleph_manual('http://www.comlab.ox.ac.uk/oucl/groups/machlearn/Aleph/index.html'
 
 
 
-:- thread_local input_mod/1.
+:- thread_local aleph_input_mod/1.
 
 
 
@@ -6675,7 +6674,7 @@ tautology((Head:-Body),M):-
 % Requires generative background predicates.
 
 search_modes:-
-	input_mod(M),
+	aleph_input_mod(M),
 	M:'$aleph_global'(targetpred,targetpred(N/A)),
 	findall(N1/A1,determinations(N/A,N1/A1),L),
 	number_types([N/A|L],0,TypedPreds,Last),
@@ -9370,7 +9369,7 @@ read_examples(Pos,Neg,M):-
 
 aleph_read_pos_examples(Type,M) :-
 	broadcast(background(loaded)),
-	%input_mod(M),!,
+	%aleph_input_mod(M),!,
 	clean_up_examples(Type,M),
 	asserta(M:'$aleph_global'(size,size(Type,0))),
 	M:'$aleph_global'(size,size(Type,N)),
@@ -9379,7 +9378,7 @@ aleph_read_pos_examples(Type,M) :-
 	asserta(M:'$aleph_global'(atoms_left,atoms_left(Type,Ex))),
 	asserta(M:'$aleph_global'(last_example,last_example(Type,N))).
 aleph_read_neg_examples(Type,M) :-
-	%input_mod(M),!,
+	%aleph_input_mod(M),!,
 	clean_up_examples(Type,M),
 	asserta(M:'$aleph_global'(size,size(Type,0))),
 	/*
@@ -9646,7 +9645,7 @@ determinations(Pred1,Pred2,M):-
         M:'$aleph_global'(determination,determination(Pred1,Pred2)).
 
 determination(Pred1,Pred2):-
-	input_mod(M),
+	aleph_input_mod(M),
 	determination(Pred1,Pred2,M).
 
 determination(Pred1,Pred2,M):-
@@ -10998,4 +10997,5 @@ sandbox:safe_meta(aleph:induce_theory(_), []).
 sandbox:safe_meta(aleph:induce_modes(_), []).
 sandbox:safe_meta(aleph:induce_constraints(_), []).
 sandbox:safe_meta(aleph:induce_features(_), []).
+sandbox:safe_meta(aleph:abducible(_), []).
 

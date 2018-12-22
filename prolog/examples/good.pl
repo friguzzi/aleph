@@ -18,9 +18,9 @@
 :- endif.
 :- aleph.
 :-style_check(-discontiguous).
-:- set(i,2).
-:- set(good,true).
-% :- set(goodfile,'good.pl').	% optional file to store good clauses
+:- aleph_set(i,2).
+:- aleph_set(good,true).
+% :- aleph_set(goodfile,'good.pl').	% optional file to store good clauses
 
 :- modeh(1,eastbound(+train)).
 :- modeb(1,short(+car)).

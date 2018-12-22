@@ -21,17 +21,17 @@
 :- determination(class/2,windy/2).
 :- determination(class/2,lteq/2).
 
-% :- set(tree_type,classification).
-:- set(tree_type,class_probability).
-:- set(classes,[play,dont_play]).
-:- set(minpos,2).	% minimum examples in leaf for splitting
-:- set(clauselength,5).
-:- set(lookahead,2).	% to allow lookahead to lteq/2
-:- set(prune_tree,true).
-:- set(confidence,0.25).% pruning conf parameter used by C4.5
-:- set(evalfn,entropy).
-% :- set(evalfn,gini).
-:- set(dependent,2).	% second arg of class/2 is to predicted
+% :- aleph_set(tree_type,classification).
+:- aleph_set(tree_type,class_probability).
+:- aleph_set(classes,[play,dont_play]).
+:- aleph_set(minpos,2).	% minimum examples in leaf for splitting
+:- aleph_set(clauselength,5).
+:- aleph_set(lookahead,2).	% to allow lookahead to lteq/2
+:- aleph_set(prune_tree,true).
+:- aleph_set(confidence,0.25).% pruning conf parameter used by C4.5
+:- aleph_set(evalfn,entropy).
+% :- aleph_set(evalfn,gini).
+:- aleph_set(dependent,2).	% second arg of class/2 is to predicted
 
 :-begin_bg.
 

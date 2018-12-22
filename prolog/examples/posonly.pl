@@ -19,9 +19,9 @@
 :- endif.
 :- aleph.
 :- set_random(seed(111)).
-:- set(evalfn,posonly).
-:- set(clauselength,2).
-:- set(gsamplesize,20).
+:- aleph_set(evalfn,posonly).
+:- aleph_set(clauselength,2).
+:- aleph_set(gsamplesize,20).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % class/2 learns the class (mammal/fish/reptile/bird) of various animals.
 

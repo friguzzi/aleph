@@ -41,11 +41,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % specify tree type
 
-:- set(tree_type,model).
-:- set(evalfn,mse).
-:- set(minpos,2).       % minimum examples in leaf for splitting
-:- set(mingain,0.01).	% toy example needs this to be low
-:- set(dependent,2).	% second argument of f/2 is to predicted
+:- aleph_set(tree_type,model).
+:- aleph_set(evalfn,mse).
+:- aleph_set(minpos,2).       % minimum examples in leaf for splitting
+:- aleph_set(mingain,0.01).	% toy example needs this to be low
+:- aleph_set(dependent,2).	% second argument of f/2 is to predicted
 
 % specify predicate definition to use for model construction
 :- model(predict/3).

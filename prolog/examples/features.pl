@@ -12,15 +12,15 @@
 :- use_rendering(prolog).
 :- endif.
 :- aleph.
-:- set(i,2).
-:- set(clauselength,10).
-:- set(minacc,0.6).
-:- set(noise,3).
-:- set(minscore,3).
-:- set(minpos,3).
-:- set(nodes,5000).
-:- set(explore,true).
-:- set(max_features,10).
+:- aleph_set(i,2).
+:- aleph_set(clauselength,10).
+:- aleph_set(minacc,0.6).
+:- aleph_set(noise,3).
+:- aleph_set(minscore,3).
+:- aleph_set(minpos,3).
+:- aleph_set(nodes,5000).
+:- aleph_set(explore,true).
+:- aleph_set(max_features,10).
 
 :- modeh(1,eastbound(+train)).
 :- modeb(1,short(+car)).
@@ -47,7 +47,7 @@
 
 % show examples as boolean vectors
 
-:- set(portray_examples,true).
+:- aleph_set(portray_examples,true).
 
 aleph_portray(train_pos):-
         setting(train_pos,File),

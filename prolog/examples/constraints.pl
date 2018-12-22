@@ -30,7 +30,7 @@
 :- determination(aleph_false/0,female/1).
 :- determination(aleph_false/0,(not)/1).
 
-:- set(noise,0).
+:- aleph_set(noise,0).
 
 :-begin_bg.
 male('Fred').

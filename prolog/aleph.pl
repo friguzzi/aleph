@@ -6531,7 +6531,7 @@ hvar_types(Head,HVarTypes,M):-
 
 bvar_types([],V,V,_M).
 bvar_types([Lit|Lits],VTSoFar,BVarTypes,M):-
-	M:'$aleph_has_vars'(Lit,IVarTypes,OVarTypes),
+	M:'$aleph_has_vars'(Lit,IVarTypes,OVarTypes),!,
         consistent_vartypes(IVarTypes,VTSoFar),
         \+ inconsistent_vartypes(OVarTypes,VTSoFar),
         aleph_append(OVarTypes,VTSoFar,VT1),

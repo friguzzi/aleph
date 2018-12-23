@@ -8546,7 +8546,7 @@ record_targetpred(M):-
 	fail.
 record_targetpred(_M).
 
-check_recursive_calls(M):-
+check_recursive_calls(M):-trace,
 	M:'$aleph_global'(targetpred,targetpred(Name/Arity)),
 	M:'$aleph_global'(determination,determination(Name/Arity,Name/Arity)),
 	record_recursive_sat_call(Name/Arity,M),
@@ -8651,7 +8651,7 @@ record_recursive_sat_call(Name/Arity,M):-
 	Clause = (Head:-
 			'$aleph_global'(stage,set(stage,saturation)),
 			'$aleph_sat'(example,example(Num,Type)),
-			M:example(Num1,Type,Head),
+			example(Num1,Type,Head),
 			Num1 \= Num, !),	% to prevent tautologies
 	assertz(M:Clause).
 
@@ -11038,6 +11038,7 @@ sandbox:safe_meta(aleph:addgcws_i(_), []).
 sandbox:safe_meta(aleph:sat(_), []).
 sandbox:safe_meta(aleph:reduce(_), []).
 sandbox:safe_meta(aleph:good_clauses(_), []).
+sandbox:safe_meta(aleph:model(_), []).
 
 
 

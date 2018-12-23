@@ -197,7 +197,8 @@ system:term_expansion((:- aleph), []) :-
   assert(M:(coversn:-coversn(_))),
 
   aleph:clean_up(M),
-  aleph:reset(M).
+  aleph:reset(M),
+  retractall(M:example(_,_,_)).
 
 
 system:term_expansion((:- begin_bg), []) :-
@@ -236,7 +237,7 @@ system:term_expansion(C, []) :-
   C\= (:- end_in_pos),
   prolog_load_context(module, M),
   aleph_input_mod(M),
-  M:pos_on,!,record_example(nocheck,pos,C,_,M).
+  M:pos_on,!,aleph:record_example(nocheck,pos,C,_,M).
 
 system:term_expansion((:- end_in_pos), []) :-
   prolog_load_context(module, M),

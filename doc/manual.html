@@ -62,7 +62,7 @@
 
    is modoule-file that can run also under SWISH.
 
-   aleph.pl was developed by Paolo Niccolò Giubelli.
+   aleph.pl was developed by Paolo Niccolò Giubelli and Fabrizio Riguzzi.
   </p>
   <h2 id="usage">
    Usage
@@ -102,21 +102,17 @@
     </h3>
    <br/>
    Nothing has changed here, you can use
-   <em>
-    modeh/2
-   </em>
-   ,
-   <em>
-    modeb/2
-   </em>
-   ,
-   <em>
-    determination/2
-   </em>
+   <code>
+    modeh/2</code>,
+   <code>
+    modeb/2</code>,
+   <code>
+    determination/2</code>
    as documented in the
    <a href="manual">
     manual
-   </a>
+   </a> except that <code>set/2</code> and <code>setting/2</code> are replaced by <code>aleph_set/2</code> and 
+   <code>aleph_setting/2</code>.
   </p>
   <pre><code>% e.g.: 
 :- modeh(*,grandparent(+person,-person)).
@@ -126,6 +122,8 @@
 :- modeb(*,father(+person,-person)).
 :- modeb(*,parent(+person,-person)).
 
+:- aleph_set(verbose,1).
+
 % ...
 </code></pre>
   <p>
@@ -134,13 +132,13 @@
     </h3>
    <br/>
    Nothing has changed here except you need to enclose this section with
-   <em>
+   <code>
     begin_bg/0
-   </em>
+   </code>
    and
-   <em>
+   <code>
     end_bg/0
-   </em>
+   </code>
    directives. Between them you can put your background clauses.
   </p>
   <pre><code>% Background knoweledge is delimited by begin_bg/0 and end_bg/0
@@ -189,38 +187,29 @@ grandparent(bob,bob). % bob is not a grandparent of bob
   </p>
   <pre><code>:-aleph_read_all.
 </code></pre>
-  <p>
-   You can start the induction process by calling the
-   <em>
-    induce/1
-   </em>
-
-   predicate, which returns the theory as a list of clauses.
-   <em>
-    induce/1
-   </em>
-   It's
-   <em>
-    induce/0
-   </em>
-   predicate.
-  </p>
 <h2 id="commands">
    New induction commands
   </h2>
-  <p>
-   The following predicates were created. Their arity has been increased by one compared to the original version. Program is the (new) output argument which returns the theory as a list of predicates.<br />
+  <p>You can use the usual Aleph commands for performing learning.
+   Moreover, the following predicates were added. 
+   Their arity has been increased by one compared to the original version. 
+   The (new) output argument returns the result of the command.<br />
 	<ul>
-		<li><em>induce(-Program)</em></li>
-		<li><em>induce_tree(-Program)</em></li>
-		<li><em>induce_cover(-Program)</em></li>
-		<li><em>induce_modes(-Modes)</em></li>
-		<li><em>induce_incremental(-Program)</em></li>
-		<li><em>induce_max(-Program)</em></li>
-		<li><em>induce_features(-Features)</em></li>
-		<li><em>induce_constraints(-Constraints)</em></li>
-		<li><em>induce_theory(Program)</em></li>
-		<li><em>induce_clauses(Program)</em></li>
+		<li><code>induce(-Program)</code></li>
+		<li><code>induce_tree(-Program)</code></li>
+		<li><code>induce_cover(-Program)</code></li>
+		<li><code>induce_modes(-Modes)</code></li>
+		<li><code>induce_incremental(-Program)</code></li>
+		<li><code>induce_max(-Program)</code></li>
+		<li><code>induce_features(-Features)</code></li>
+		<li><code>induce_constraints(-Constraints)</code></li>
+		<li><code>induce_theory(-Program)</code></li>
+		<li><code>induce_clauses(-Program)</code></li>
+		<li><code>covers(-Ex)</code></li>
+		<li><code>coversn(-Ex)</code></li>
+		<li><code>reduce(-Cl)</code></li>
+		<li><code>addgcws(-Cl)</code></li>
+		<li><code>good_clauses(-Cls)</code></li>
 	</ul>
   </p>
   <h2 id="examples">

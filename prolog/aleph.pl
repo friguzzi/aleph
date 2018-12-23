@@ -8546,7 +8546,7 @@ record_targetpred(M):-
 	fail.
 record_targetpred(_M).
 
-check_recursive_calls(M):-trace,
+check_recursive_calls(M):-
 	M:'$aleph_global'(targetpred,targetpred(Name/Arity)),
 	M:'$aleph_global'(determination,determination(Name/Arity,Name/Arity)),
 	record_recursive_sat_call(Name/Arity,M),

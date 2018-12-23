@@ -32,7 +32,6 @@
 
 :- module(aleph,
 	  [ 
-	    read_all/1,
 		induce/1,
 		induce_tree/1,
 		induce_max/1,
@@ -70,8 +69,6 @@
 		example_saturated/1,
 		addgcws_i/1,
 		rmhyp_i/1,
-		addgcws/1,
-		rmhyp/1,
 		random/2,
 		mode/2,
 		modeh/2,
@@ -128,7 +125,6 @@ inf(1e10).
 
 :- meta_predicate addgcws_i(:).
 :- meta_predicate rmhyp_i(:).
-:- meta_predicate read_all(:).
 :- meta_predicate good_clauses(:).
 
 
@@ -136,7 +132,10 @@ inf(1e10).
 
 system:term_expansion((:- aleph), []) :-
   prolog_load_context(module, M),
-  assert(aleph_input_mod(M)),
+  assert(aleph_input_mod(M)),!,
+  initialize(M).
+
+initialize(M):-
 	% nl, nl,
 	% write('A L E P H'), nl,
 	% aleph:aleph_version(Version), write('Version '), write(Version), nl,
@@ -9351,6 +9350,7 @@ get_start_label(Evalfn,[1,0,2,Val],M):-
 % read_all(+Prefix)
 %	read background and examples
 read_all(M:Prefix):-
+	initialize(M),
 	read_all(Prefix,Prefix,Prefix,M).
 
 % read_all/2 and read_all/3 largely
@@ -9373,7 +9373,7 @@ read_all(Back,Pos,Neg,M):-
 
 read_background(Back,M):-
 	construct_name(background,Back,File,M),
-	aleph_reconsult(File),
+	consult(M:File),
 	broadcast(background(loaded)).
 
 read_examples(Pos,Neg,M):-

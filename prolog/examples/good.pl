@@ -4,7 +4,7 @@
 % (optionally in the file specified by goodfile)
 
 /** <examples>
-?- sat(1),reduce,show(good).
+?- sat(1),reduce,show(good),good_clauses(C).
 */
 
 :-use_module(library(aleph)).

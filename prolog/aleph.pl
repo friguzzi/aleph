@@ -174,7 +174,7 @@ system:term_expansion((:- aleph), []) :-
  '$aleph_has_ivar'/4,
  '$aleph_determination'/2,
  '$aleph_search_seen'/2)),
-  M:dynamic((prune/1,cost/3)),
+  M:dynamic((prune/1,cost/3,example/3)),
   style_check(-discontiguous),
   aleph:init(swi,M),
   assert(M:(reduce:-reduce(_))),
@@ -197,8 +197,8 @@ system:term_expansion((:- aleph), []) :-
   assert(M:(coversn:-coversn(_))),
 
   aleph:clean_up(M),
-  aleph:reset(M),
-  retractall(M:example(_,_,_)).
+  retractall(M:example(_,_,_)),
+  aleph:reset(M).
 
 
 system:term_expansion((:- begin_bg), []) :-
@@ -3479,11 +3479,11 @@ add_model(Evalfn,Clause,PredictArg,Examples,_,_,_,M):-
 	leaf_predicts(Arity,Model,Var),
 	lazy_evaluate_refinement([],C,[Name/Arity],Examples,[],[],C1,M),
 	find_model_error(Evalfn,Examples,C1,PredictArg,Total,Error,M),
-	pp_dclause(C1,M),
-	p1_message(error),
-	p1_message(Error),
+	% pp_dclause(C1,M),
+	% p1_message(error),
+	% p1_message(Error),
 	M:'$aleph_local'(tree_model,_,_,BestSoFar),
-	p1_message(BestSoFar),
+	%p1_message(BestSoFar),
 	(Error < BestSoFar ->
 		retract(M:'$aleph_local'(tree_model,_,_,_)),
 		asserta(M:'$aleph_local'(tree_model,C1,Total,Error));
@@ -4018,9 +4018,9 @@ sat(M:Num):-
 	sat(Num,M).
 
 sat(Num,M):-
-	integer(Num),
+	integer(Num),!,
 	M:example(Num,pos,_),
-	sat(pos,Num,M), !.
+	sat(pos,Num,M),!.
 sat(Example,M):-
 	record_example(check,uspec,Example,Num,M),
 	sat(uspec,Num,M), !.
@@ -11029,17 +11029,36 @@ sandbox:safe_meta(aleph:induce_incremental(_), []).
 sandbox:safe_meta(aleph:induce_clauses(_), []).
 sandbox:safe_meta(aleph:induce_theory(_), []).
 sandbox:safe_meta(aleph:induce_modes(_), []).
-sandbox:safe_meta(aleph:induce_constraints(_), []).
 sandbox:safe_meta(aleph:induce_features(_), []).
-sandbox:safe_meta(aleph:abducible(_), []).
-sandbox:safe_meta(aleph:rdhyp(_), []).
-sandbox:safe_meta(aleph:sphyp_i(_), []).
-sandbox:safe_meta(aleph:show(_), []).
-sandbox:safe_meta(aleph:addgcws_i(_), []).
+sandbox:safe_meta(aleph:induce_constraints(_), []).
 sandbox:safe_meta(aleph:sat(_), []).
-sandbox:safe_meta(aleph:reduce(_), []).
-sandbox:safe_meta(aleph:good_clauses(_), []).
+sandbox:safe_meta(aleph:aleph_set(_,_), []).
+sandbox:safe_meta(aleph:aleph_settting(_,_), []).
+sandbox:safe_meta(aleph:noset(_), []).
 sandbox:safe_meta(aleph:model(_), []).
+sandbox:safe_meta(aleph:mode(_,_), []).
+sandbox:safe_meta(aleph:modeh(_,_), []).
+sandbox:safe_meta(aleph:modeb(_,_), []).
+sandbox:safe_meta(aleph:show(_), []).
+sandbox:safe_meta(aleph:hypothesis(_,_,_), []).
+sandbox:safe_meta(aleph:rdhyp(_), []).
+sandbox:safe_meta(aleph:addhyp_i(_), []).
+sandbox:safe_meta(aleph:sphyp_i(_), []).
+sandbox:safe_meta(aleph:covers(_), []).
+sandbox:safe_meta(aleph:coversn(_), []).
+sandbox:safe_meta(aleph:reduce(_), []).
+sandbox:safe_meta(aleph:abducible(_), []).
+sandbox:safe_meta(aleph:bottom(_), []).
+sandbox:safe_meta(aleph:commutative(_), []).
+sandbox:safe_meta(aleph:symmetric(_), []).
+sandbox:safe_meta(aleph:lazy_evaluate(_), []).
+sandbox:safe_meta(aleph:positive_only(_), []).
+sandbox:safe_meta(aleph:example_saturated(_), []).
+
+sandbox:safe_meta(aleph:addgcws_i(_), []).
+sandbox:safe_meta(aleph:rmhyp_i(_), []).
+sandbox:safe_meta(aleph:addgcws_i(_), []).
+sandbox:safe_meta(aleph:good_clauses(_), []).
 
 
 

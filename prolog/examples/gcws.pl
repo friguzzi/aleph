@@ -2,6 +2,8 @@
 %       closed-world specialisation within Aleph
 /** <examples>
 ?- rdhyp,sphyp,show(gcws),addgcws.
+% input
+% |: normal(A).
 */
 
 :-use_module(library(aleph)).

@@ -5,7 +5,9 @@
 %	b. read_all(ineq).
 %	c. sat(1).
 %	d. reduce.
-
+/** <examples>
+?- sat(1),reduce(A).
+*/
 :- use_module(library(aleph)).
 :- if(current_predicate(use_rendering/1)).
 :- use_rendering(prolog).

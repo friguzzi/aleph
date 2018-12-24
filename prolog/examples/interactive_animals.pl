@@ -5,7 +5,11 @@
 %       b. read_all(animals).
 %       c. induce_tree.
 
-
+/** <examples>
+?- induce_tree(T).
+% try with this input
+1.
+*/
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % specify tree type
 

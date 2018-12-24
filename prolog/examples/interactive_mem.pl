@@ -4,7 +4,24 @@
 %       b. read_all(mem).
 %       c. induce_incremental.
 % After that, just follow the menus on screen.
-
+/** <examples>
+?- induce_incremental(Program).
+% try with this input
+mem(1,[1]).
+overgeneral.
+show(constraints).
+none.
+ok.
+ok.
+none.
+mem(1,[2,1]).
+because(overgeneral,not(mem(1,[2,3]))).
+none.
+ok.
+ok.
+none.
+none.
+*/
 % :- modeh(*,mem(+any,+list)).
 % :- modeb(*,mem(+any,+list)).
 % :- modeb(1,((+list) = ([-any|-list]))).

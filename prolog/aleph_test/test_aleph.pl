@@ -23,8 +23,8 @@ test(induce,[true(Program =
 :-ensure_loaded(library(examples/animals)).
 
 test(induce_tree,[true(Program = 
-  [(class(_378, _380):-not(has_covering(_378, hair)), _380=nmammal),  
-  (class(_478, _480):-has_covering(_478, hair), _480=mammal)])]):-
+  [  (class(_478, _480):-has_covering(_478, hair), _480=mammal),
+  (class(_378, _380):-not(has_covering(_378, hair)), _380=nmammal)])]):-
   induce_tree(Program).
 
 :- end_tests(animals).
@@ -89,11 +89,7 @@ test(induce):-
 :-ensure_loaded(library(examples/posonly)).
 
 test(induce,[true(Program = 
-  [class(_,reptile),
-  (class(F,reptile):-has_legs(F,4)),
-  class(_,fish),
-  (class(H,mammal):-has_covering(H,hair)),
-  (class(I,bird):-has_covering(I,feathers))]
+    [class(_F,reptile),(class(G,reptile):-has_legs(G,4)),(class(H,fish):-has_covering(H,none)),(class(I,mammal):-has_covering(I,hair)),(class(J,bird):-has_covering(J,feathers))]
 )]
 
 %  [class(_,reptile),
@@ -174,8 +170,8 @@ test(induce,[true(F =
 :-ensure_loaded(library(examples/weather)).
 
 test(induce_tree,[true(Program = 
-  [(class(_2924, _2926):-not((outlook(_2924, rain), windy(_2924, true))), random(_2926, [0.7142857142857143-play, 0.2857142857142857-dont_play])), 
-   (class(_3084, _3086):-outlook(_3084, rain), windy(_3084, true), random(_3086, [0.75-dont_play, 0.25-play]))])]):-
+  [   (class(_3084, _3086):-outlook(_3084, rain), windy(_3084, true), random(_3086, [0.75-dont_play, 0.25-play])),
+  (class(_2924, _2926):-not((outlook(_2924, rain), windy(_2924, true))), random(_2926, [0.7142857142857143-play, 0.2857142857142857-dont_play]))])]):-
   induce_tree(Program).
 
 :- end_tests(weather).
@@ -185,8 +181,112 @@ test(induce_tree,[true(Program =
 :-ensure_loaded(library(examples/wedge)).
 
 test(induce_tree,[true(Program = 
-[(f(_4526, _4528):-not(lteq(_4526, 0.0)), predict(_4526, _4528, [-1.0, 1.0, 0.0])),  (f(_4682, _4684):-lteq(_4682, 0.0), predict(_4682, _4684, [1.0, 1.0, 0.0]))]
+[ (f(_4682, _4684):-lteq(_4682, 0.0), predict(_4682, _4684, [1.0, 1.0, 0.0])),
+(f(_4526, _4528):-not(lteq(_4526, 0.0)), predict(_4526, _4528, [-1.0, 1.0, 0.0]))]
      )]):-
   induce_tree(Program).
 
 :- end_tests(wedge).
+
+:- begin_tests(interactive_mem, []).
+
+:-ensure_loaded(library(examples/interactive_mem)).
+
+test(induce_incremental,[true(Program = 
+[(mem(_316, _318):-_318=[_316|_330]),(mem(_196, _198):-_198=[_214|_216], mem(_196, _216))]
+     )]):-
+  tmp_file_stream(utf8,File,Stream),
+  write(Stream,'
+mem(1,[1]).
+overgeneral.
+show(constraints).
+none.
+ok.
+ok.
+none.
+mem(1,[2,1]).
+because(overgeneral,not(mem(1,[2,3]))).
+none.
+ok.
+ok.
+none.
+none.
+'),
+  close(Stream),
+  open(File,read,S),
+  set_input(S),!,
+  induce_incremental(Program),
+  close(S),
+  delete_file(File).
+
+:- end_tests(interactive_mem).
+
+:- begin_tests(interactive_animals, []).
+
+:-ensure_loaded(library(examples/interactive_animals)).
+
+test(induce_tree,[true(Program = 
+[  (class(_514, _516):-has_covering(_514, hair), _516=mammal),
+(class(_402, _404):-not(has_covering(_402, hair)), _404=nmammal)
+])]):-
+  tmp_file_stream(utf8,File,Stream),
+  write(Stream,'1.'),
+  close(Stream),
+  open(File,read,S),
+  set_input(S),!,
+  induce_tree(Program),
+  close(S),
+  delete_file(File).
+
+:- end_tests(interactive_animals).
+
+:- begin_tests(numbers_guess, []).
+
+:-ensure_loaded(library(examples/numbers_guess)).
+
+test(reduce,[true(A = (p(_3438):-gteq(_3438, 9)))]):-
+  sat(1),
+  reduce(A).
+
+:- end_tests(numbers_guess).
+
+:- begin_tests(numbers_ineq, []).
+
+:-ensure_loaded(library(examples/numbers_ineq)).
+
+test(reduce,[true(A = (p(_6732):-gteq(_6732, 8)))]):-
+  sat(1),
+  reduce(A).
+
+:- end_tests(numbers_ineq).
+
+:- begin_tests(numbers_line, []).
+
+:-ensure_loaded(library(examples/numbers_line)).
+
+test(reduce,[true(A = (p(_6186, _6188):-lin_regress1(_6188, _6186, 2, 0, 0.0)))]):-
+  sat(1),
+  reduce(A).
+
+:- end_tests(numbers_line).
+
+:- begin_tests(numbers_miline, []).
+
+:-ensure_loaded(library(examples/numbers_miline)).
+
+test(reduce,[true(A = (p(_8242, _8244, _8246):-lin_regress1(_8242, _8246, _8244, 2, 0, 0.0)))]):-
+  sat(1),
+  reduce(A).
+
+:- end_tests(numbers_miline).
+
+:- begin_tests(portray_train, []).
+
+:-ensure_loaded(library(examples/portray_train)).
+
+test(induce,[true(F =
+  [(eastbound(_834):-has_car(_834, _846), short(_846), closed(_846))]
+  )]):-
+  induce(F).
+
+:- end_tests(portray_train).

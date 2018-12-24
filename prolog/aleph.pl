@@ -48,7 +48,9 @@
 		goals_to_list/2,
                 clause_to_list/2,
                 aleph_subsumes/2,
+		aleph_delete/3,
 		hypothesis/3,
+		hypothesis/4,
 		var_types/3,
 		show/1,
 		rdhyp/1,
@@ -70,6 +72,7 @@
 		addgcws_i/1,
 		rmhyp_i/1,
 		random/2,
+		aleph_random/1,
 		mode/2,
 		modeh/2,
 		modeb/2,
@@ -173,7 +176,7 @@ initialize(M):-
  '$aleph_has_ivar'/4,
  '$aleph_determination'/2,
  '$aleph_search_seen'/2)),
-  M:dynamic((prune/1,cost/3,example/3)),
+  M:dynamic((prune/1,cost/3,example/3,aleph_portray/1)),
   style_check(-discontiguous),
   aleph:init(swi,M),
   assert(M:(reduce:-reduce(_))),
@@ -241,14 +244,9 @@ system:term_expansion(C, []) :-
 system:term_expansion((:- end_in_pos), []) :-
   prolog_load_context(module, M),
   aleph_input_mod(M),!,
-  retractall(M:pos_on),
+  retractall(M:pos_on).
   %findall(C,M:incpos(C),L),
   %retractall(M:incpos(_)),
-	M:'$aleph_global'(size,size(pos,N)),
-	(N > 0 -> Ex = [1-N]; Ex = []),
-	asserta(M:'$aleph_global'(atoms,atoms(pos,Ex))),
-	asserta(M:'$aleph_global'(atoms_left,atoms_left(pos,Ex))),
-	asserta(M:'$aleph_global'(last_example,last_example(pos,N))).
 %  (M:in(IN0)->
 %    retract(M:in(IN0)),%
 %	
@@ -301,14 +299,9 @@ system:term_expansion(:- determination(A,B), []) :-
 system:term_expansion((:- end_in_neg), []) :-
   prolog_load_context(module, M),
   aleph_input_mod(M),!,
-  retractall(M:neg_on),
+  retractall(M:neg_on).
   %findall(C,M:incneg(C),L),
   %retractall(M:incneg(_)),
-  M:'$aleph_global'(size,size(neg,N)),
-	(N > 0 -> Ex = [1-N]; Ex = []),
-	asserta(M:'$aleph_global'(atoms,atoms(neg,Ex))),
-	asserta(M:'$aleph_global'(atoms_left,atoms_left(neg,Ex))),
-	asserta(M:'$aleph_global'(last_example,last_example(neg,N))).
 %
 %  (M:in(IN0)->
 %    retract(M:in(IN0)),
@@ -327,12 +320,32 @@ system:term_expansion((:- aleph_read_all), []) :-
 	aleph:check_user_search(M),
 	aleph:check_posonly(M),
 	aleph:check_auto_refine(M),
-	aleph:check_abducibles(M),
+	aleph:check_abducibles(M),	
 	%Aggiunti alla fine
 	aleph:reset_counts(M),
 	asserta(M:'$aleph_global'(last_clause,last_clause(0))),
-	broadcast(examples(loaded)).
+	broadcast(examples(loaded)),
+	(M:'$aleph_global'(size,size(pos,NP))-> true;NP=0),
+	(NP > 0 -> ExP = [1-NP]; ExP = []),
+	asserta(M:'$aleph_global'(atoms,atoms(pos,ExP))),
+	asserta(M:'$aleph_global'(atoms_left,atoms_left(pos,ExP))),
+	asserta(M:'$aleph_global'(last_example,last_example(pos,NP))),
+	(M:'$aleph_global'(size,size(neg,NN))->true;NN=0),
+	(NN > 0 -> ExN = [1-NN]; ExN = []),
+	asserta(M:'$aleph_global'(atoms,atoms(neg,ExN))),
+	asserta(M:'$aleph_global'(atoms_left,atoms_left(neg,ExN))),
+	asserta(M:'$aleph_global'(last_example,last_example(neg,NN))),
+	set_lazy_recalls(M),
+	(setting(prior,_,M) -> true;
+		normalise_distribution([NP-pos,NN-neg],Prior),
+		set(prior,Prior,M)
+	).
 %%%%%%%%
+
+system:term_expansion(end_of_file, end_of_file) :-
+  prolog_load_context(module, M),
+  aleph_input_mod(M),!,
+  retractall(pita_input_mod(M)).
 
 assert_all([],_M,[]).
 
@@ -393,7 +406,6 @@ init(swi,M):-
 	style_check(-discontiguous),
 	M:dynamic(aleph_false/0),
 	M:dynamic(example/3),
-	assert((aleph_random(X):- I = 1000000, X is float(random(I-1))/float(I))),
 	assert((depth_bound_call(G,L,M):-
 			call_with_depth_limit(M:G,L,R),
 			R \= depth_limit_exceeded)),
@@ -402,6 +414,7 @@ init(swi,M):-
 	assert((system(X):- shell(X))),
 	assert((exists(X):- exists_file(X))), 
 	assert((aleph_reconsult(F):- consult(F))),
+	%assert((aleph_random(X):- I = 1000000, X is float(random(I-1))/float(I))),
         (predicate_property(thread_local(_),built_in) -> true;
 		assert(thread_local(_))),
 	
@@ -415,6 +428,9 @@ aleph_background_predicate(Lit,M):-
 aleph_consult(X,M):- aleph_open(X,read,S), repeat,
 			read(S,F), (F = end_of_file -> close(S), !;
 					assertz(M:F),fail).
+
+aleph_random(X):- I = 1000000, X is float(random(I-1))/float(I).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A L E P H
 
@@ -429,7 +445,6 @@ aleph_manual('http://www.comlab.ox.ac.uk/oucl/groups/machlearn/Aleph/index.html'
 
 
 
-:- multifile aleph_false/0.
 :- multifile prune/1.
 :- multifile refine/2.
 :- multifile cost/3.
@@ -4885,7 +4900,6 @@ copy_features(Features,M):-
 
 % ============= UNUSED ====================
 copy_theory_eval(0,_,Label,M):-
-%	trace,
 	M:'$aleph_global'(hypothesis,hypothesis(_,Clause,_,_)), !,
 	label_create(Clause,Label,M),
 	p_message('Rule 0'),
@@ -4896,34 +4910,29 @@ copy_theory_eval(0,_,Label,M):-
 	label_print_eval([PC,NC,L]),
 	nl.
 copy_theory_eval(ClauseNum,Program,_,M):-
-%	trace,
 	integer(ClauseNum),
 	ClauseNum > 0,
 	M:'$aleph_global'(theory,theory(ClauseNum,_,Clause,_,_)),
 	!,
 	copy_theory_eval_inner(Clause,Program).
-copy_theory_eval(_,_,_,_M):-trace.
+copy_theory_eval(_,_,_,_M).
 copy_theory_eval_inner((H:-true),Program):-
-	trace,
 	!,
 	copy_theory_eval_inner(H,Program).
 copy_theory_eval_inner((H:-B),Program):-
-	trace,
 	!,
     copy_term((H:-B),(Head:-Body)),
     numbervars((Head:-Body),0,_),
 	add_lit_to_program(Body,Program).
 copy_theory_eval_inner((Lit),Program):- 
-	trace,
 	!,
 	copy_term(Lit,Lit1),
     numbervars(Lit1,0,_),
 	add_lit_to_program(Lit1,Program).
 
 add_lit_to_program((Lit,Lits),[Lit|Program1]):-
-	trace,
 	add_lit_to_program(Lits,Program1).
-add_lit_to_program((Lit),[Lit]):-trace.
+add_lit_to_program((Lit),[Lit]).
 
 % ============= /UNUSED ====================
 
@@ -5055,7 +5064,8 @@ induce_incremental(M:Program):-
 	!,
         stopwatch(StopClock),
         Time is StopClock - StartClock,
-		copy_theory(Program,M),
+		copy_theory(Program0,M),
+		reverse(Program0,Program),
         show(theory,M),
 	show(pos,M),
 	show(neg,M),
@@ -5247,7 +5257,8 @@ induce_tree(M:Program):-
 	construct_tree(Type,M),
 	stopwatch(StopClock),
 	Time is StopClock - StartClock,
-	copy_theory(Program,M),
+	copy_theory(Program0,M),
+	reverse(Program0,Program),
 	show(theory,M),
 	record_theory(Time,M),
 	reinstate_values([refine],M), !.
@@ -5404,7 +5415,6 @@ ask_example(E,M):-
 	(Response = ok  -> E = E1; E = Response).
 
 ask_example_web(E,M):-
-	trace,
 	(M:'$aleph_global'(example_selected,example_selected(pos,N)) ->
 		M:example(N,pos,E1);
 		E1 = none),
@@ -5426,7 +5436,6 @@ process_hypothesis(M):-
 	(Response = end_of_file; Response = none), !.
 
 process_hypothesis_web(M):-
-	trace,
 	show(hypothesis,M),
 	repeat,
 	show_options_web(hypothesis_selection),
@@ -5486,8 +5495,8 @@ process_hypothesis(overspecific because E,M):-
 	record_example(check,pos,E,N,M),
 	asserta(M:'$aleph_global'(example_selected,example_selected(pos,N))),
 	nl, p_message('added new positive example').
-process_hypothesis(AlephCommand,_M):-
-	AlephCommand.
+process_hypothesis(AlephCommand,M):-
+	M:AlephCommand.
 
 show_options(example_selection):-
 	nl,
@@ -9953,7 +9962,7 @@ show(constraints,M):-
 	show(aleph_false/0,M).
 show(Name/Arity,M):-
 	functor(Pred,Name,Arity),
-	current_predicate(M:Name,Pred),
+	%current_predicate(M:Name,Pred),
         nl,
         p1_message('definition'), p_message(Name/Arity),
 	clause(M:Pred,Body),
@@ -10932,48 +10941,48 @@ show_global(Key,Pred,M):-
         fail.
 show_global(_,_,_M).
 
-aleph_portray(hypothesis,true,_M):-
-	aleph_portray(hypothesis), !.
+aleph_portray(hypothesis,true,M):-
+	M:aleph_portray(hypothesis), !.
 aleph_portray(hypothesis,false,M):- 
 	p_message('hypothesis'),
 	hypothesis(Head,Body,_,M),
 	pp_dclause((Head:-Body),M), !.
 aleph_portray(_,hypothesis,_M):-  !.
 
-aleph_portray(search,true,_M):-
-	aleph_portray(search), !.
+aleph_portray(search,true,M):-
+	M:aleph_portray(search), !.
 aleph_portray(search,_,_M):- !.
 
-aleph_portray(train_pos,true,_M):-
-	aleph_portray(train_pos), !.
+aleph_portray(train_pos,true,M):-
+	M:aleph_portray(train_pos), !.
 aleph_portray(train_pos,_,M):-
 	!,
 	setting(train_pos,File,M),
 	show_file(File).
 
-aleph_portray(train_neg,true,_M):-
-	aleph_portray(train_neg), !.
+aleph_portray(train_neg,true,M):-
+	M:aleph_portray(train_neg), !.
 aleph_portray(train_neg,_,M):-
 	!,
 	setting(train_neg,File,M),
 	show_file(File).
 
-aleph_portray(test_pos,true,_M):-
-	aleph_portray(test_pos), !.
+aleph_portray(test_pos,true,M):-
+	M:aleph_portray(test_pos), !.
 aleph_portray(test_pos,_,M):-
 	!,
 	setting(test_pos,File,M),
 	show_file(File).
 
-aleph_portray(test_neg,true,_M):-
-	aleph_portray(test_neg), !.
+aleph_portray(test_neg,true,M):-
+	M:aleph_portray(test_neg), !.
 aleph_portray(test_neg,_,M):-
 	!,
 	setting(test_neg,File,M),
 	show_file(File).
 
-aleph_portray(Lit,true,_M):-
-	aleph_portray(Lit), !.
+aleph_portray(Lit,true,M):-
+	M:aleph_portray(Lit), !.
 aleph_portray(Lit,_,_M):-
         aleph_writeq(Lit).
 

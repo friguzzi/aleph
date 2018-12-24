@@ -192,5 +192,5 @@ class(crocodile,reptile).
 
 :-end_in_neg.
 
-:-aleph_read_all.
+
 

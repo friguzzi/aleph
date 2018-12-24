@@ -281,4 +281,3 @@ eastbound(west9).
 eastbound(west10).
 :-end_in_neg.
 
-:-aleph_read_all.

@@ -22,7 +22,6 @@
 <li><a href="#usage-background">Background Knoweledge Section</a></li>
 <li><a href="#usage-positive">Positive Examples Section</a></li>
 <li><a href="#usage-negative">Negative Examples Section</a></li>
-<li><a href="#usage-end">End Section</a></li>
 </ul></li>
 <li><a href="#commands">New induction commands</a></li>
 <li><a href="#examples">Examples</a></li>
@@ -49,35 +48,30 @@
    This pack contains a porting of Aleph v.5 to SWI-Prolog. The porting
    was done by
    <a href="http://ml.unife.it/fabrizio-riguzzi/">
-    Fabrizio Riguzzi
-   </a>
-   .
+    Fabrizio Riguzzi</a>.
   </p>
   <p>
-   Two files are included: aleph_orig.pl is a direct porting of Aleph for Yap,
+   Two files are included: <code>aleph_orig.pl</code> is a direct porting of Aleph for Yap,
 
-   while aleph.pl
+   while <code>aleph.pl</code>
 
    is modoule-file that can run also under SWISH.
 
-   aleph.pl was developed by Paolo Niccolò Giubelli and Fabrizio Riguzzi.
+   <code>aleph.pl</code> was developed by Paolo Niccolò Giubelli and Fabrizio Riguzzi.
   </p>
   <h2 id="usage">
    Usage
   </h2>
   <p>
-   aleph_orig.pl can be used as the original Aleph.
+   <code>aleph_orig.pl</code> can be used as the original Aleph.
   </p>
   <p>
-   aleph.pl differs because it uses a single input
-
+   <code>aleph.pl</code> differs because it uses a single input
    file instead of three files for background,
-
    positive and negative examples.
   </p>
   <p>
    The input file for aleph.pl must be
-
    structured as follows:
   </p>
   <p>
@@ -175,15 +169,6 @@ grandparent(dad(mum(bob)),bob).
 grandparent(bob,bob). % bob is not a grandparent of bob
 %...
 :-end_in_neg.
-</code></pre>
-  <p>
-    <h3 id="usage-end">
-     7. End Section
-    </h3>
-   <br/>
-   The file must contain the following directive at the end:
-  </p>
-  <pre><code>:-aleph_read_all.
 </code></pre>
 <h2 id="commands">
    New induction commands

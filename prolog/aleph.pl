@@ -311,10 +311,15 @@ system:term_expansion((:- end_in_neg), []) :-
 %  ;
 %    assert(M:in(L))
 %  ).
-system:term_expansion((:- aleph_read_all), []) :-
+ system:term_expansion((:- aleph_read_all), []) :-
         prolog_load_context(module, M),
-	aleph_input_mod(M),
-	aleph:record_targetpred(M), 	
+ 	aleph_input_mod(M),!.
+
+system:term_expansion(end_of_file, end_of_file) :-
+  prolog_load_context(module, M),
+  aleph_input_mod(M),!,
+  retractall(pita_input_mod(M)),
+  	aleph:record_targetpred(M), 	
 	aleph:check_recursive_calls(M),
 	aleph:check_prune_defs(M),
 	aleph:check_user_search(M),
@@ -340,12 +345,6 @@ system:term_expansion((:- aleph_read_all), []) :-
 		normalise_distribution([NP-pos,NN-neg],Prior),
 		set(prior,Prior,M)
 	).
-%%%%%%%%
-
-system:term_expansion(end_of_file, end_of_file) :-
-  prolog_load_context(module, M),
-  aleph_input_mod(M),!,
-  retractall(pita_input_mod(M)).
 
 assert_all([],_M,[]).
 

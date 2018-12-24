@@ -143,5 +143,5 @@ f(1.0,0.0).
 :-end_in_pos.
 :-begin_in_neg.
 :-end_in_neg.
-:-aleph_read_all.
+
 

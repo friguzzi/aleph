@@ -192,5 +192,5 @@ class(crocodile,nmammal).
 
 :-end_in_pos.
 
-:-aleph_read_all.
+
 

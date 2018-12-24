@@ -194,4 +194,4 @@ class(crocodile,nmammal).
 
 :-end_in_neg.
 
-:-aleph_read_all.
+

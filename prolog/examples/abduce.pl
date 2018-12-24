@@ -874,4 +874,4 @@ grandparent(mum(mum(jane)),dad(mum(jane))).
 grandparent(mum(mum(jane)),mum(dad(jane))).
 grandparent(mum(mum(jane)),mum(mum(jane))).
 :-end_in_neg.
-:-aleph_read_all.
+

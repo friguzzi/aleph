@@ -3659,4 +3659,4 @@ normal(1592).
 normal(1596).
 normal(1600).
 :-end_in_neg.
-:-aleph_read_all.
+

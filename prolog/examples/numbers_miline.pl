@@ -150,4 +150,3 @@ p(b,3,9).
 
 :-end_in_neg.
 
-:-aleph_read_all.

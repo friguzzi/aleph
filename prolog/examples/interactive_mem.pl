@@ -42,4 +42,3 @@ none.
 :- determination(mem/2,mem/2).
 :- determination(mem/2,'='/2).
 
-:-aleph_read_all.

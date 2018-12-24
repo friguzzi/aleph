@@ -31,13 +31,13 @@
 :- aleph_set(portray_literals,true).
 
 aleph_portray(p(A,B)):-
-	write(p(A,B)).
+	format("~q",[p(A,B)]).
 aleph_portray(lin_regress1(Y,X,M,C,E)):-
-	write(Y), write(' is '),
-	write(M), write(' * '),
-	write(X), write(' + '),
-	write(C), write(' +/- '),
-	write(E).
+	format("~q",[Y]), write(' is '),
+	format("~q",[M]), write(' * '),
+	format("~q",[X]), write(' + '),
+	format("~q",[C]), write(' +/- '),
+	format("~q",[E]).
 
 :-begin_bg.
 

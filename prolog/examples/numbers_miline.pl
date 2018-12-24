@@ -32,15 +32,15 @@
 :- aleph_set(portray_literals,true).
 
 aleph_portray(p(Bag,A,B)):-
-	write(p(Bag,A,B)).
+	format("~q",[p(Bag,A,B)]).
 aleph_portray(lin_regress1(B,Y,X,M,C,E)):-
-	write(' exists '), write(X),
-	write(' in bag '), write(B), write(' such that '),
-	write(Y), write(' is '),
-	write(M), write(' * '),
-	write(X), write(' + '),
-	write(C), write(' +/- '),
-	write(E).
+	write(' exists '), format("~q",[X]),
+	write(' in bag '), format("~q",[B]), write(' such that '),
+	format("~q",[Y]), write(' is '),
+	format("~q",[M]), write(' * '),
+	format("~q",[X]), write(' + '),
+	format("~q",[C]), write(' +/- '),
+	format("~q",[E]).
 
 
 :-begin_bg.

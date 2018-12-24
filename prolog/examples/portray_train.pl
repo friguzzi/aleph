@@ -296,50 +296,50 @@ wheels(car_102,2).
 :- aleph_set(portray_literals,true).
 
 aleph_portray(eastbound(A)):-
-	write('Train '), write(A),
+	write('Train '), format("~q",[A]),
 	write(' is eastbound').
 
 aleph_portray(has_car(A,B)):-
-	write('train '), write(A),
-	write(' has a car '), write(B).
+	write('train '), format("~q",[A]),
+	write(' has a car '), format("~q",[B]).
 
 aleph_portray(short(B)):-
-	write('car '), write(B),
+	write('car '), format("~q",[B]),
 	write(' is short').
 
 aleph_portray(closed(B)):-
-	write('car '), write(B),
+	write('car '), format("~q",[B]),
 	write(' is closed').
 
 aleph_portray(long(B)):-
-	write('car '), write(B),
+	write('car '), format("~q",[B]),
 	write(' is long').
 
 aleph_portray(open_car(B)):-
-	write('car '), write(B),
+	write('car '), format("~q",[B]),
 	write(' is open').
 
 aleph_portray(double(B)):-
-	write('car '), write(B),
+	write('car '), format("~q",[B]),
 	write(' is double-walled').
 
 aleph_portray(jagged(B)):-
-	write('car '), write(B),
+	write('car '), format("~q",[B]),
 	write(' has a jagged roof').
 
 aleph_portray(shape(B,C)):-
-	write('car '), write(B),
-	write(' is '), write(C), write('-shaped').
+	write('car '), format("~q",[B]),
+	write(' is '), format("~q",[C]), write('-shaped').
 
 aleph_portray(wheels(B,C)):-
-	write('car '), write(B),
-	write(' has '), write(C),
+	write('car '), format("~q",[B]),
+	write(' has '), format("~q",[C]),
 	write(' wheels').
 
 aleph_portray(load(B,C,D)):-
-	write('car '), write(B),
+	write('car '), format("~q",[B]),
 	write(' has '), write(D),
-	write(' '), write(C), write('-shaped load(s)').
+	write(' '), format("~q",[C]), write('-shaped load(s)').
 
 
 :-end_bg.

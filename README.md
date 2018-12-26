@@ -79,9 +79,6 @@ grandparent(bob,bob). % bob is not a grandparent of bob
 :-end_in_neg.
 ```
 
-
-You can start the induction process by calling the `induce/1` predicate, which returns the theory as a list of clauses. `induce/1` replaces the old `induce/0` predicate.
-
 ## New induction commands
 
 You can use the usual Aleph commands for performing learning.
@@ -90,21 +87,21 @@ You can use the usual Aleph commands for performing learning.
    The (new) output argument returns the result of the command.<br />
 
 
-- induce(-Program)
-- induce_tree(-Program)
-- induce_cover(-Program)
-- induce_modes(-Modes)
-- induce_incremental(-Program)
-- induce_max(-Program)
-- induce_features(-Features)
-- induce_constraints(-Constraints)
-- induce_theory(-Program)
-- induce_clauses(-Program)
-- covers(-Ex)
-- coversn(-Ex)
-- reduce(-Cl)
-- addgcws(-Cl)
-- good_clauses(-Cls)
+- `induce(-Program)`
+- `induce_tree(-Program)`
+- `induce_cover(-Program)`
+- `induce_modes(-Modes)`
+- `induce_incremental(-Program)`
+- `induce_max(-Program)`
+- `induce_features(-Features)`
+- `induce_constraints(-Constraints)`
+- `induce_theory(-Program)`
+- `induce_clauses(-Program)`
+- `covers(-Ex)`
+- `coversn(-Ex)`
+- `reduce(-Cl)`
+- `addgcws(-Cl)`
+- `good_clauses(-Cls)`
 
 ## Manual
 The manual can be found at http://www.cs.ox.ac.uk/activities/machlearn/Aleph/.

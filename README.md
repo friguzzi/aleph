@@ -67,7 +67,7 @@ The negative examples section is delimited by `begin_in_neg/0` and `end_in_neg/0
 ```
 :-begin_in_neg.
 grandparent(bob,bob). % bob is not a grandparent of bob
-%...
+% ...
 :-end_in_neg.
 ```
 

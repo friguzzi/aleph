@@ -55,7 +55,6 @@
 		show/1,
 		rdhyp/1,
 		addhyp_i/1,
-		sphyp/1,
 		sphyp_i/1,
 		covers/1,
 		coversn/1,
@@ -82,6 +81,27 @@
 		op(900,xfy,because)
 	  ]).
 
+/** <module> aleph
+
+# A Learning Engine for Proposing Hypotheses - ALEPH 
+## Version 5
+
+Aleph is an Inductive Logic Programming system developed by 
+[Ashwin Srinivasan](https://www.bits-pilani.ac.in/goa/ashwin/profile):
+
+http://www.cs.ox.ac.uk/activities/machlearn/Aleph/
+
+Aleph v.5 was ported to SWI-Prolog by [Fabrizio Riguzzi](http://ml.unife.it/fabrizio-riguzzi/)
+and Paolo Niccolò Giubelli.
+
+
+Aleph is freely available for academic purposes.                        %
+If you intend to use it for commercial purposes then                    %
+please contact Ashwin Srinivasan first.                                 %
+
+@author Ashwin Srinivasan, Fabrizio Riguzzi and Paolo Niccolò Giubelli.
+@copyright Ashwin Srinivasan
+*/
 :- use_module(library(arithmetic)). 
 :-use_module(library(broadcast)).
 :-use_module(library(time)).
@@ -102,7 +122,7 @@ inf(1e10).
 :- meta_predicate induce_constraints(:).
 :- meta_predicate sat(:).
 :- meta_predicate aleph_set(:,+).
-:- meta_predicate aleph_settting(:,+).
+:- meta_predicate aleph_setting(:,+).
 :- meta_predicate noset(:).
 :- meta_predicate model(:).
 :- meta_predicate mode(:,+).
@@ -427,7 +447,11 @@ aleph_background_predicate(Lit,M):-
 aleph_consult(X,M):- aleph_open(X,read,S), repeat,
 			read(S,F), (F = end_of_file -> close(S), !;
 					assertz(M:F),fail).
-
+/**
+ * aleph_random(-X:float) is det
+ *
+ * Returns a random number in [0,1)
+ */
 aleph_random(X):- I = 1000000, X is float(random(I-1))/float(I).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4020,6 +4044,11 @@ redundant(Lit,Lits,[Head|Body]):-
 	Lit = Lit1,
 	aleph_subsumes(Lits,Rest1).
 
+/**
+ * aleph_subsumes(+Lits:list,+Lits1:list) is det
+ *
+ * determine if Lits subsumes Lits1
+ */
 aleph_subsumes(Lits,Lits1):-
 	\+(\+((numbervars(Lits,0,_),numbervars(Lits1,0,_),aleph_subset1(Lits,Lits1)))).
 
@@ -4027,6 +4056,14 @@ aleph_subsumes(Lits,Lits1):-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % S A T  /  R E D U C E
 
+/**
+ * sat(:Num:int) is det
+ *
+ * Num is an integer. 
+ * Builds the bottom clause for positive example number Num. 
+ * Positive examples are numbered from 1, and the numbering corresponds to the order of 
+ * appearance.
+ */
 sat(M:Num):-
 	sat(Num,M).
 
@@ -4113,7 +4150,11 @@ sat(Type,Num,M):-
 sat(_,_,M):-
 	noset(stage,M).
 
-
+/**
+ * reduce(:Clause:term) is det
+ *
+ * Run a search on the current bottom clause, which can be obtained with the sat/1 command.
+ */
 reduce(M:Cl):-
 	setting(search,Search,M), 
 	catch(reduce(Search,Cl,M),abort,reinstate_values), !.
@@ -4818,24 +4859,24 @@ collect(rls_restart,done(CPU, Nodes, selected(Best,RCl,PCov,NCov)),[T0,S], [T1,S
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % C O N T R O L
 
-% induce_clauses/0: the basic theory construction predicate
-% constructs theories 1 clause at a time
-
+/**
+ * induce_clauses(:Program:list) is det
+ *
+ * The basic theory construction predicate.
+ * Constructs theories 1 clause at a time.
+ */
 induce_clauses(M:Program):-
 	setting(interactive,true,M), !,
 	induce_incremental(M:Program).
 induce_clauses(M:Program):-
 	induce(M:Program).
-
-% induce/0: non-interactive theory construction
-% constructs theories 1 clause at a time
-% does greedy cover removal after each clause found
-
-% induce/1: non-interactive theory construction
-% constructs theories 1 clause at a time
-% does greedy cover removal after each clause found
-% Unlinke induce/0, induce/1 returns the theory
-% as a list of clauses.
+/**
+ * induce(:Program:list) is det
+ *
+ * Non-interactive theory construction.
+ * Constructs theories 1 clause at a time.
+ * Does greedy cover removal after each clause found
+ */
 induce(M:Program):-
 	clean_up(M),
 	set(greedy,true,M),
@@ -4934,11 +4975,14 @@ add_lit_to_program((Lit,Lits),[Lit|Program1]):-
 add_lit_to_program((Lit),[Lit]).
 
 % ============= /UNUSED ====================
-
-% construct theories 1 clause at a time
-% does not perform greedy cover removal after each clause found
-% constructs unique ``maximum cover set'' solution
-% 	by obtaining the best clause covering each example
+/**
+ * induce_max(:Program:list) is det
+ *
+ * Construct theories 1 clause at a time.
+ * Does not perform greedy cover removal after each clause found.
+ * Constructs unique ``maximum cover set'' solution
+ * 	by obtaining the best clause covering each example
+ */
 % slow
 induce_max(M:Program):-
 	clean_up(M),
@@ -4984,10 +5028,12 @@ induce_max1(Finish,M):-
 	retract(M:'$aleph_local'(counter,Next)).
 induce_max1(_).
 
-% construct theories 1 clause at a time
-% does not perform greedy cover removal after each clause found
-
-
+/**
+ * induce_cover(:Program:list) is det
+ *
+ * Construct theories 1 clause at a time.
+ * Does not perform greedy cover removal after each clause found.
+ */
 induce_cover(M:Program):-
 	clean_up(M),
 	retractall(M:'$aleph_global'(search_stats,search_stats(_,_))),
@@ -5008,7 +5054,7 @@ induce_cover(M:Program):-
         M:'$aleph_global'(atoms_left,atoms_left(pos,[])),
 	stopwatch(StopClock),
 	Time is StopClock - StartClock,
-    copy_theory(Program,M),
+	copy_theory(Program,M),
 	show(theory,M),
 	record_theory(Time,M),
 	reinstate(portray_search,M),
@@ -5017,27 +5063,31 @@ induce_cover(M:Program):-
 	show_total_stats(M),
 	record_total_stats(M), !.
 
-% rudimentary version of an interactive, incremental rule learner
-% repeatedly does the following:
-%	1. ask the user for an example
-%		default is to use a new positive example from previous search
-%		if user responds with Ctrl-d (eof) then search stops
-%		if user responds with "ok" then default is used
-%		otherwise user has to provide an example
-%	2. construct bottom clause using that example
-%		expects to have appropriate mode declarations
-%	3. search for the best clause C
-%	4. ask the user about C who can respond with
-%		ok: clause added to theory
-%		prune: statement added to prevent future
-%				clauses that are subsumed by C
-%		overgeneral: constraint added to prevent future
-%				clauses that subsume C
-%		overgeneral because not(E): E is added as a negative example
-%		overspecific: C is added as new positive example
-%		overspecific because E: E is added as a new positive example
-%		X: where X is some aleph command like "covers"
-%		Ctrl-d (eof): return to Step 1		
+/**
+ * induce_incremental(:Program:list) is det
+ *
+ * Rudimentary version of an interactive, incremental rule learner.
+ * 
+ * 1. ask the user for an example
+ *  default is to use a new positive example from previous search
+ *  if user responds with Ctrl-d (eof) then search stops
+ *  if user responds with "ok" then default is used
+ *  otherwise user has to provide an example
+ * 2. construct bottom clause using that example
+ *   expects to have appropriate mode declarations
+ * 3. search for the best clause C
+ * 4. ask the user about C who can respond with
+ *    - ok: clause added to theory
+ *    - prune: statement added to prevent future
+ *      clauses that are subsumed by C
+ *    - overgeneral: constraint added to prevent future
+ * 	clauses that subsume C
+ *    - overgeneral because not(E): E is added as a negative example
+ *    - overspecific: C is added as new positive example
+ *    - overspecific because E: E is added as a new positive example
+ *    - X: where X is some aleph command like "covers"
+ *    - Ctrl-d (eof): return to Step 1		
+ */
 
 induce_incremental(M:Program):-
 	clean_up(M),
@@ -5074,26 +5124,30 @@ induce_incremental(M:Program):-
 	reinstate_values([interactive,portray_search,proof_strategy,mode],M),
         p1_message('time taken'), p_message(Time).
 
-% induce_theory/0: does theory-level search
-% currently only with search = rls; and evalfn = accuracy
 
 
-% induce entire theories from batch data
-% using a randomised local search
-% 	currently, this can use either: simulated annealing with a fixed temp,
-% 	GSAT, or a WSAT-like algorithm
-% 	the choice of these is specified by the parameter: rls_type
-% 	all methods employ random multiple restarts
-% 	and a limit on the number of moves
-%       	the number of restarts is specified by set(tries,...)
-%       	the number of moves is specified by set(moves,...)
-% 	annealing currently restricted to using a fixed temperature
-%       	the temperature is specified by set(temperature,...)
-%       	the fixed temp. makes it equivalent to the Metropolis alg.
-% 	WSAT requires a ``random-walk probability'' 
-%       	the walk probability is specified by set(walk,...)
-%       	a walk probability of 0 is equivalent to doing standard GSAT
-% 	theory accuracy is the evaluation function
+/**
+ * induce_theory(:Program:list) is det
+ *
+ * does theory-level search
+ * currently only with search = rls; and evalfn = accuracy
+ * induce entire theories from batch data
+ * using a randomised local search
+ * currently, this can use either: simulated annealing with a fixed temp,
+ * GSAT, or a WSAT-like algorithm
+ * the choice of these is specified by the parameter: rls_type
+ * all methods employ random multiple restarts
+ * and a limit on the number of moves
+ * the number of restarts is specified by aleph_set(tries,...)
+ * the number of moves is specified by aleph_set(moves,...)
+ * annealing currently restricted to using a fixed temperature
+ * the temperature is specified by aleph_set(temperature,...)
+ * the fixed temp. makes it equivalent to the Metropolis alg.
+ * WSAT requires a ``random-walk probability'' 
+ * the walk probability is specified by aleph_set(walk,...)
+ * a walk probability of 0 is equivalent to doing standard GSAT
+ * theory accuracy is the evaluation function
+ */
 aleph_induce_theory(rls,M):-
 	clean_up(M),
 	retractall(M:'$aleph_global'(search_stats,search_stats(_,_))),
@@ -5121,16 +5175,19 @@ induce_theory(M:Program):-
 	setting(search,Search,M),
 	aleph_induce_theory(Search,Program,M).
 
-% induce_constraints/0: search for logical constraints that
-% hold in the background knowledge
-% A constraint is a clause of the form aleph_false:-... 
-% This is modelled on the Claudien program developed by
-% L. De Raedt and his colleagues in Leuven
-% Constraints that are ``nearly true'' can be obtained
-% by altering the noise setting
-% All constraints found are stored as `good clauses'.
 
-
+/**
+ * induce_constraints(:Constraints:list) is det
+ *
+ * search for logical constraints that
+ * hold in the background knowledge
+ * A constraint is a clause of the form aleph_false:-... 
+ * This is modelled on the Claudien program developed by
+ * L. De Raedt and his colleagues in Leuven
+ * Constraints that are ``nearly true'' can be obtained
+ * by altering the noise setting
+ * All constraints found are stored as `good clauses'.
+ */
 induce_constraints(M:Constraints):-
 	clean_up(M),
 	retractall(M:'$aleph_global'(search_stats,search_stats(_,_))),
@@ -5148,9 +5205,12 @@ induce_constraints(M:Constraints):-
 	show_total_stats(M),
 	record_total_stats(M), !.
 
-% induce_modes/0: search for an acceptable set of mode declarations
 
-
+/**
+ * induce_modes(:Modes:list) is det
+ *
+ * search for an acceptable set of mode declarations
+ */
 induce_modes(M:Modes):-
 	clean_up(M),
 	store_values([typeoverlap],M),
@@ -5158,17 +5218,18 @@ induce_modes(M:Modes):-
 	reinstate_values([typeoverlap],M),
 	copy_modes(Modes,M),
 	show(modes,M),!.
-
-% induce_features/0: search for interesting boolean features
-% each good clause found in a search constitutes a new boolean feature
-% the maximum number of features is controlled by set(max_features,F)
-% the features are constructed by doing the following:
-% while (number of features =< F) do: 
-%       (a) randomly select an example;
-%       (b) search for good clauses using the example selected;
-%       (c) construct new features using good clauses
-
-
+/**
+ * induce_features(:Features:list) is det
+ *
+ * search for interesting boolean features
+ * each good clause found in a search constitutes a new boolean feature
+ * the maximum number of features is controlled by aleph_set(max_features,F)
+ * the features are constructed by doing the following:
+ * while (number of features =< F) do: 
+ * 1. randomly select an example;
+ * 2. search for good clauses using the example selected;
+ * 3. construct new features using good clauses
+ */
 induce_features(M:Features):-
 	clean_up(M),
 	store_values([good,check_good,updateback,construct_features,samplesize,greedy,explore,lazy_on_contradiction],M),
@@ -5203,43 +5264,48 @@ induce_features(M:Features):-
         assertz(M:'$aleph_global'(atoms_left,atoms_left(pos,AtomsLeft))), 
         reinstate_values([good,check_good,updateback,construct_features,samplesize,greedy,explore,lazy_on_contradiction],M), !.
 
-% induce_tree/0: construct a theory using recursive partitioning
-% rules are obtained by building a tree 
-% the tree constructed can be one of 4 types
-%        classification, regression, class_probability or model
-%        the type is set by set(tree_type,...)
-% In addition, the following parameters are relevant
-%        set(classes,ListofClasses): when tree_type is classification or
-%                                    or class_probability
-%        set(prune_tree,Flag): for pruning rules from a tree
-%        set(confidence,C): for pruning of rules as described by
-%                           J R Quinlan in the C4.5 book
-%        set(lookahead,L): lookahead for the refinement operator to avoid
-%                          local zero-gain literals
-%        set(dependent,A): argument of the dependent variable in the examples
-% The basic procedure attempts to construct a tree to predict the dependent
-% variable in the examples. Note that the mode declarations must specify the
-% variable as an output argument. Paths from root to leaf constitute clauses.
-% Tree-construction is viewed as a refinement operation: any leaf can currently
-% be refined by extending the corresponding clause. The extension is done using
-% Aleph's automatic refinement operator that extends clauses within the mode
-% language. A lookahead option allows additions to include several literals.
-% Classification problems currently use entropy gain to measure worth of additions.
-% Regression and model trees use reduction in standard deviation to measure
-% worth of additions. This is not quite correct for the latter.
-% Pruning for classification is done on the final set of clauses from the tree.
-% The technique used here is the reduced-error pruning method.
-% For classification trees, this is identical to the one proposed by
-% Quinlan in C4.5: Programs for Machine Learning, Morgan Kauffmann.
-% For regression and model trees, this is done by using a pessimistic estimate
-% of the sample standard deviation. This assumes normality of observed values
-% in a leaf. This method and others have been studied by L. Torgo in
-% "A Comparative Study of Reliable Error Estimators for Pruning Regression
-% Trees"
-% Following work by F Provost and P Domingos, pruning is not employed
-% for class probability prediction.
-% Currently no pruning is performed for model trees.
 
+/**
+ * induce_tree(:Tree:list) is det
+ *
+ * construct a theory using recursive partitioning.
+ * rules are obtained by building a tree 
+ * the tree constructed can be one of 4 types
+ *        classification, regression, class_probability or model
+ *        the type is set by aleph_set(tree_type,...)
+ * In addition, the following parameters are relevant
+ *  - aleph_set(classes,ListofClasses): when tree_type is classification or
+ *                                    or class_probability
+ *  - aleph_set(prune_tree,Flag): for pruning rules from a tree
+ *  - aleph_set(confidence,C): for pruning of rules as described by
+ *                           J R Quinlan in the C4.5 book
+ *  - aleph_set(lookahead,L): lookahead for the refinement operator to avoid
+ *                          local zero-gain literals
+ *  - aleph_set(dependent,A): argument of the dependent variable in the examples
+ *
+ * The basic procedure attempts to construct a tree to predict the dependent
+ * variable in the examples. Note that the mode declarations must specify the
+ * variable as an output argument. Paths from root to leaf constitute clauses.
+ * Tree-construction is viewed as a refinement operation: any leaf can currently
+ * be refined by extending the corresponding clause. The extension is done using
+ * Aleph's automatic refinement operator that extends clauses within the mode
+ * language. A lookahead option allows additions to include several literals.
+ * Classification problems currently use entropy gain to measure worth of additions.
+ * Regression and model trees use reduction in standard deviation to measure
+ * worth of additions. This is not quite correct for the latter.
+ * Pruning for classification is done on the final set of clauses from the tree.
+ * The technique used here is the reduced-error pruning method.
+ * For classification trees, this is identical to the one proposed by
+ * Quinlan in C4.5: Programs for Machine Learning, Morgan Kauffmann.
+ * For regression and model trees, this is done by using a pessimistic estimate
+ * of the sample standard deviation. This assumes normality of observed values
+ * in a leaf. This method and others have been studied by L. Torgo in
+ * "A Comparative Study of Reliable Error Estimators for Pruning Regression
+ * Trees"
+ * Following work by F Provost and P Domingos, pruning is not employed
+ * for class probability prediction.
+ * Currently no pruning is performed for model trees.
+ */
 induce_tree(M:Program):-
 	clean_up(M),
 	setting(tree_type,Type,M),
@@ -6526,7 +6592,11 @@ aleph_output_var(_,_,_).
 aleph_output_var(Var,Type,Lit,ThisPos,M):-
 	M:'$aleph_has_ovar'(Lit,Var,Type,Pos),
 	Pos @< ThisPos.
-
+/**
+ * var_types(+Atoms:list,-VarTypes:list,+Module:atomic) is det
+ *
+ * Returns the types of variables in Atoms. Internal predicate.
+ */
 var_types([Head|Body],VarTypes,M):-
         hvar_types(Head,HVarTypes,M),
         bvar_types(Body,HVarTypes,BVarTypes,M),
@@ -7740,6 +7810,11 @@ aleph_delete_list([H1|T1],L1,L):-
 aleph_delete_list([_|T1],L1,L):-
 	aleph_delete_list(T1,L1,L).
 
+/**
+ * aleph_delete(-El:term,-List:list,-Rest:list) is nondet
+ *
+ * Deletes element from list.
+ */
 aleph_delete(H,[H|T],T).
 aleph_delete(H,[H1|T],[H1|T1]):-
 	aleph_delete(H,T,T1).
@@ -7886,6 +7961,11 @@ revzap([], L, L).
 goals_to_clause((Head,Body),(Head:-Body)):- !.
 goals_to_clause(Head,Head).
 
+/**
+ * clause_to_list(+Cl:term,-List:list) is det
+ *
+ * From a clause to a list
+ */
 clause_to_list((Head:-true),[Head]):- !.
 clause_to_list((Head:-Body),[Head|L]):-
         !,
@@ -7931,6 +8011,12 @@ list_to_goals([Goal],Goal):- !.
 list_to_goals([Goal|Goals],(Goal,Goals1)):-
 	list_to_goals(Goals,Goals1).
 
+/**
+ * goals_to_list(-Goals:term,-List:list) is det
+ *
+ * Converts a coonjunction of goals to a list
+ * 
+ */
 goals_to_list((true,Goals),T):-
 	!,
 	goals_to_list(Goals,T).
@@ -9643,6 +9729,11 @@ bottom_key(N,T,Key,Flag,M):-
 		Key = false,
 		Flag = false).
 
+/**
+ * aleph_set(:Parameter:atomic,+Value:term) is det
+ *
+ * Sets the value of a parameter.
+ */
 aleph_set(M:Variable,Value):-
   set(Variable,Value,M).
 
@@ -9658,7 +9749,11 @@ set(Variable,Value,M):-
 	assertz(M:'$aleph_global'(Variable,set(Variable,V))),
 	broadcast(set(Variable,V)),
 	special_consideration(Variable,Value,M).
-
+/**
+ * aleph_setting(:Parameter:atomic,+Value:term) is det
+ *
+ * Reads the value of a parameter.
+ */
 aleph_setting(M:Variable,Value):-
 	setting(Variable,Value,M).
 
@@ -9679,6 +9774,12 @@ noset(Variable,M):-
 	set_default(Variable,M).
 noset(_,_M).
 
+/**
+ * man(-Manual:URL) is det
+ *
+ * returns manual URL
+ * 
+ */
 man(M):-
 	aleph_manual(M).
 
@@ -9695,42 +9796,95 @@ determination(Pred1,Pred2,M):-
 		update_backpreds(Pred1,M);
 		true).
 
+/**
+ * abducible(:Pred:term) is det
+ *
+ * Pred s of the form N/A, where the atom N is the name of the predicate, and A its arity. 
+ * Specifies that ground atoms with symbol N/A can be abduced if required.
+ */
 abducible(M:Name/Arity):-
 	abducible(Name/Arity,M).
 
 abducible(Name/Arity,M):-
 	assertz(M:'$aleph_global'(abducible,abducible(Name/Arity))).
 
+/**
+ * commutative(:Pred:term) is det
+ *
+ * Pred is of the form N/A, where the atom N is the name of the predicate, and A its arity.
+ * Specifies that literals with symbol N/A are commutative.
+ */
 commutative(M:Name/Arity):-
 	commutative(Name/Arity,M).
 
 commutative(Name/Arity,M):-
 	assertz(M:'$aleph_global'(commutative,commutative(Name/Arity))).
-
+/**
+ * symmetric(:Pred:term) is det
+ *
+ * Pred is of the form N/A, where the atom N is the name of the predicate, and A its arity.
+ * Specifies that literals with symbol N/A are symmetric.
+ */
 symmetric(M:Name/Arity):-
 	symmetric(Name/Arity,M).
 
 symmetric(Name/Arity,M):-
 	assertz(M:'$aleph_global'(symmetric,symmetric(Name/Arity))).
 
+/**
+ * lazy_evaluate(:Pred:term) is det
+ *
+ * Pred V is of the form N/A, where the atom N is the name of the predicate, and A its arity. 
+ * Specifies that outputs and constants for literals with symbol N/A are to be evaluated 
+ * lazily during the search. This is particularly useful if the constants required 
+ * cannot be obtained from the bottom clause constructed by using a single example. 
+ * During the search, the literal is called with a list containing a pair of lists for each 
+ * input argument representing `positive' and `negative' substitutions obtained 
+ * for the input arguments of the literal. These substitutions are obtained by executing 
+ * the partial clause without this literal on the positive and negative examples. 
+ * The user needs to provide a definition capable of processing a call with a list of 
+ * list-pairs in each argument, and how the outputs are to be computed from such information. 
+ * For further details see A. Srinivasan and R. Camacho, Experiments in numerical reasoning with 
+ * ILP, Jnl. Logic Programming.
+ */
 lazy_evaluate(M:Name/Arity):-
 	lazy_evaluate(Name/Arity,M).
 
 lazy_evaluate(Name/Arity,M):-
         assertz(M:'$aleph_global'(lazy_evaluate,lazy_evaluate(Name/Arity))).
 
+/**
+ * model(:Pred:term) is det
+ *
+ * Predis of the form N/A, where the atom N is the name of the predicate, and A its arity. 
+ * Specifies that predicate N/A will be used to construct and execute models 
+ * in the leaves of model trees. This automatically results in predicate N/A being 
+ * lazily evaluated (see lazy_evaluate/1).
+ */
 model(M:Name/Arity):-
 	model(Name/Arity,M).
 
 model(Name/Arity,M):-
         assertz(M:'$aleph_global'(model,model(Name/Arity))).
 
+/**
+ * positive_only(:Pred:term) is det
+ *
+ * Pred is of the form N/A, where the atom N is the name of the predicate, 
+ * and A its arity. States that only positive substitutions are required 
+ * during lazy evaluation of literals with symbol N/A. 
+ * This saves some theorem-proving effort.
+ */
 positive_only(M:Name/Arity):-
 	positive_only(Name/Arity,M).
 
 positive_only(Name/Arity,M):-
 	assertz(M:'$aleph_global'(positive_only,positive_only(Name/Arity))).
-
+/**
+ * mode(:Recall:int,+PredicateMode:term) is det
+ *
+ * Declare the mode of call for predicates that can appear in any clause hypothesised by Aleph
+ */
 mode(M:Recall,Pred):-
 	mode(Recall,Pred,M).
 
@@ -9746,7 +9900,12 @@ modes(N/A,Mode,M):-
         Mode = modeb(_,Pred),
         M:'$aleph_global'(modeb,Mode),
         functor(Pred,N,A).
-
+/**
+ * modeh(:Recall:int,+PredicateMode:term) is det
+ *
+ * Recall is one of: a positive integer or *. Mode is a mode template as in a mode/2 declaration. 
+ * Declares a mode for the head of a hypothesised clause. Required when evalfn is posonly.
+ */
 modeh(M:Recall,Pred):-
 	modeh(Recall,Pred,M).
 
@@ -9757,7 +9916,12 @@ modeh(Recall,Pred,M):-
 		assertz(M:'$aleph_global'(mode,mode(Recall,Pred))),
         	functor(Pred,Name,Arity),
         	update_backpreds(Name/Arity,M)).
-
+/**
+ * modeb(:Recall:int,+PredicateMode:term) is det
+ *
+ * Recall is one of: a positive integer or *. Mode is a mode template as in a mode/2 declaration. 
+ * Declares a mode for a literal in the body of a hypothesised clause.
+ */
 modeb(M:Recall,Pred):-
 	modeb(Recall,Pred,M).
 
@@ -9804,6 +9968,34 @@ gen_feature(Feature,Label,Class,M):-
 	split_clause(Feature,Template,Body),
 	assertz(M:'$aleph_feature'(feature,feature(Id,Label,Class,Template,Body))).
 
+/**
+ * show(+V:atomic) is det
+ * 
+ * Different values of V result in showing the following.
+ * - bottom Current bottom clause.
+ * - constraints Constraints found by induce_constraints.
+ * - determinations Current determination declarations.
+ * - features Propositional features constructed from good clauses found so far.
+ * - gcws Hypothesis constructed by the gcws procedure.
+ * - good Good clauses found in searches conducted so far (good clauses all have a utility above that specified by minscore).
+ * - hypothesis Current hypothesised clause.
+ * - modes Current mode declarations (including all modeh and modeb declarations).
+ * - modehs Current modeh declarations.
+ * - modebs Current modeb declarations.
+ * - neg Current negative examples.
+ * - pos Current positive examples.
+ * - posleft Positive examples not covered by theory so far.
+ * - rand Current randomly-generated examples (used when evalfn is posonly).
+ * - search Current search (requires definition for portray(search)).
+ * - settings Current parameter settings.
+ * - sizes Current sizes of positive and negative examples.
+ * - theory Current theory constructed.
+ * - test_neg Examples in the file associated with the parameter test_neg.
+ * - test_pos Examples in the file associated with the parameter test_pos.
+ * - train_neg Examples in the file associated with the parameter train_neg.
+ * - train_pos Examples in the file associated with the parameter train_pos.
+ * - Name/Arity Current definition of the predicate Name/Arity.
+ */
 show(M:S):-
 	show(S,M).
 
@@ -9985,6 +10177,12 @@ show(_,_M).
 settings(M):-
 	show(settings,M).
 
+/**
+ * good_clauses(:GoodClauses:list) is det
+ *
+ * Good clauses found in searches conducted so far (good clauses all have a utility 
+ * above that specified by minscore).
+ */
 good_clauses(M:GC):-
 	good_clauses(GC,M).
 
@@ -10005,8 +10203,11 @@ examples(Type,List,M):-
         fail.
 examples(_,_,_M).
 
-% bottom(-Clause)
-% 	returns current bottom clause
+/**
+ * bottom(:BottomClause:term) is det
+ *
+ * BottomClause is the current bottom clause.
+ */
 bottom(M:Clause):-
 	bottom(Clause,M).
 
@@ -10062,9 +10263,31 @@ best_hypothesis(Head1,Body1,[P,N,L],M):-
 	split_clause(Clause,Head2,Body2), !,
 	Head1 = Head2, Body1 = Body2.
 
+/**
+ * hypothesis(:Head:term,-Body:term,-Label:list) is det
+ * 
+ * Head is the head of the current hypothesised clause. 
+ * Body is the body of the current hypothesised clause. 
+ * Label is the list [P,N,L] where P is the positive examples covered by the 
+ * hypothesised clause, N is the negative examples covered by the 
+ * hypothesised clause, and L is the number of literals in the 
+ * hypothesised clause.
+ * 
+ */
 hypothesis(M:Head1,Body1,Label):-
 	hypothesis(Head1,Body1,Label,M).
 
+/**
+ * hypothesis(-Head:term,-Body:term,-Label:list,+Module:atomic) is det
+ * 
+ * Head is the head of the current hypothesised clause. 
+ * Body is the body of the current hypothesised clause. 
+ * Label is the list [P,N,L] where P is the positive examples covered by the 
+ * hypothesised clause, N is the negative examples covered by the 
+ * hypothesised clause, and L is the number of literals in the 
+ * hypothesised clause. Module is the module of the input file.
+ * Internal predicates.
+ */
 hypothesis(Head1,Body1,Label,M):-
 	M:'$aleph_search'(pclause,pclause(Head2,Body2)), !,
 	Head1 = Head2, Body1 = Body2,
@@ -10077,6 +10300,13 @@ hypothesis(Head1,Body1,Label,M):-
 	Head1 = Head2, Body1 = Body2,
 	get_hyp_label((Head2:-Body2),Label,M).
 
+/**
+ * rdhyp(:V:var) is det
+ * 
+ * Read a hypothesised clause from the user.
+ * Internal predicate, to be called as `rdhyp/0`.
+ * 
+ */
 rdhyp(M:_):-
 	retractall(M:'$aleph_search'(pclause,_)),
 	retractall(M:'$aleph_search'(covers,_)),
@@ -10086,6 +10316,15 @@ rdhyp(M:_):-
         nl,
         show(hypothesis,M).
 
+
+/**
+ * addhyp_i(:V:var) is det
+ * 
+ * Add current hypothesised clause to theory. 
+ * If a search is interrupted, then the current best hypothesis will be added to the theory.
+ * Internal predicate, to be called as `addhyp/0`.
+ * 
+ */
 addhyp_i(M:_):-
 	addhyp(M).
 
@@ -10129,7 +10368,13 @@ add_bottom(Bottom,M):-
 % specialise a hypothesis by recursive construction of
 % abnormality predicates
 
-
+/**
+ * sphyp_i(:V:var) is det
+ * 
+ * Specialise a hypothesis by recursive construction of
+ * abnormality predicates.
+ * Internal predicate, to be called as `sphyp/0`.
+ */
 sphyp_i(M:_):-
 	sphyp(M).
 
@@ -10146,6 +10391,13 @@ sphyp(M):-
 			hypothesis([P,N,L|T],Clause,PCover,NCover))),
         reinstate(searchstate,M).
 
+/**
+ * addgcws_i(:V:var) is det
+ * 
+ * Add hypothesis constructed by performing GCWS to theory.
+ * Internal predicate, to be called as `addgcws/0`.
+ * 
+ */
 addgcws_i(M:_):-
 	addgcws(M).
 
@@ -10154,7 +10406,13 @@ addgcws(M):-
 	asserta(M:'$aleph_search'(gcwshyp,hypothesis(Label,C,P,N))),
 	addhyp(M),
 	add_gcws(M).
-
+/**
+ * rmhyp_i(:V:var) is det
+ * 
+ * Remove the current hypothesised clause from theory
+ * Internal predicate, to be called as `rmhyp/0`.
+ * 
+ */
 rmhyp_i(M:_):-
 	rmhyp(M).
 
@@ -10167,7 +10425,13 @@ rmhyp(M):-
 rmhyp(_).
 
 
-covers(M:_):-
+/**
+ * covers(-P:int) is det
+ *
+ * Show positive examples covered by hypothesised clause.
+ * 
+ */
+covers(M:PC):-
         get_hyp(Hypothesis,M),
         label_create(Hypothesis,Label,M),
         extract_cover(pos,Label,P),
@@ -10177,7 +10441,14 @@ covers(M:_):-
 	p_message(PC),
 	retractall(M:'$aleph_search'(covers,_)),
 	asserta(M:'$aleph_search'(covers,covers(P,PC))).
-coversn(M:_):-
+
+/**
+ * coversn(-N:int) is det
+ *
+ * Show negative examples covered by hypothesised clause.
+ * 
+ */
+coversn(M:NC):-
         get_hyp(Hypothesis,M),
         label_create(Hypothesis,Label,M),
         extract_cover(neg,Label,N),
@@ -10244,6 +10515,12 @@ coversn(NList,N,M):-
 	length(NList,N),
 	asserta(M:'$aleph_search'(coversn,coverns(NCover,N))).
 
+/**
+ * example_saturated(:Ex:term) is det
+ *
+ * Ex is a positive example. This is the current example saturated.
+ * 
+ */
 example_saturated(M:Example):-
 	example_saturated(Example,M).
 
@@ -10347,7 +10624,11 @@ in((L1,L),L2,(L1,Rest),M):-
 	in(L,L2,Rest,M).
 in(L,L,true,_M).
 
-% draw a random number from a distribution
+/**
+ * random(-X:term,+Dist:term) is det
+ *
+ * draw a random number from a distribution
+ */
 random(X,normal(Mean,Sigma)):-
 	var(X), !,
 	normal(Mean,Sigma,X).
@@ -11041,7 +11322,7 @@ sandbox:safe_meta(aleph:induce_features(_), []).
 sandbox:safe_meta(aleph:induce_constraints(_), []).
 sandbox:safe_meta(aleph:sat(_), []).
 sandbox:safe_meta(aleph:aleph_set(_,_), []).
-sandbox:safe_meta(aleph:aleph_settting(_,_), []).
+sandbox:safe_meta(aleph:aleph_setting(_,_), []).
 sandbox:safe_meta(aleph:noset(_), []).
 sandbox:safe_meta(aleph:model(_), []).
 sandbox:safe_meta(aleph:mode(_,_), []).

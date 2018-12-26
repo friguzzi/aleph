@@ -131,8 +131,7 @@
    </code>
    directives. Between them you can put your background clauses.
   </p>
-  <pre><code>% Background knoweledge is delimited by begin_bg/0 and end_bg/0
-% predicates. Look at the 
+  <pre><code>% Background knoweledge is delimited by begin_bg/0 and end_bg/0.
 % E.g.:
 :-begin_bg.
 person(bob).
@@ -145,8 +144,7 @@ person(dad(bob)).
      5. Positive Examples Section
     </h3>
   </p>
-  <pre><code>% The positive examples section is delimited by begin_in_pos/0 and end_in_pos/0
-% directives.
+  <pre><code>% The positive examples section is delimited by begin_in_pos/0 and end_in_pos/0.
 % E.g.:
 :-begin_in_pos.
 grandparent(dad(dad(bob)),bob).
@@ -160,8 +158,8 @@ grandparent(dad(mum(bob)),bob).
     </h3>
    </strong>
   </p>
-  <pre><code>% The negative examples section is delimited by begin_in_neg/0 and end_in_neg/0
-% directives. Negative examples must be listed as facts.
+  <pre><code>% The negative examples section is delimited by begin_in_neg/0 and end_in_neg/0.
+% Negative examples must be listed as facts.
 % E.g.:
 :-begin_in_neg.
 grandparent(bob,bob). % bob is not a grandparent of bob

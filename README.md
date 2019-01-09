@@ -96,9 +96,9 @@ You can use the usual Aleph commands for performing learning.
 - `good_clauses(-Cls)`
 
 ## Manual
-The original manual of Aleph can be found at http://www.cs.ox.ac.uk/activities/machlearn/Aleph/.
+The original manual of Aleph can be found at [http://www.cs.ox.ac.uk/activities/machlearn/Aleph/](http://www.cs.ox.ac.uk/activities/machlearn/Aleph/).
 
-The manual of `aleph.pl` can be found at http://friguzzi.github.io/aleph/doc/manual.html.
+The manual of `aleph.pl` can be found at [http://friguzzi.github.io/aleph/doc/manual.html](http://friguzzi.github.io/aleph/doc/manual.html).
 
 ## Examples
-The examples have been downloaded from http://www.comlab.ox.ac.uk/oucl/research/areas/machlearn/Aleph/misc/examples.zip and ported to SWI-Prolog.
+The examples have been downloaded from [http://www.comlab.ox.ac.uk/oucl/research/areas/machlearn/Aleph/misc/examples.zip](http://www.comlab.ox.ac.uk/oucl/research/areas/machlearn/Aleph/misc/examples.zip) and ported to SWI-Prolog.

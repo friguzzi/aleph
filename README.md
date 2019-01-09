@@ -76,7 +76,7 @@ grandparent(bob,bob). % bob is not a grandparent of bob
 You can use the usual Aleph commands for performing learning.
    Moreover, the following predicates were added. 
    Their arity has been increased by one compared to the original version. 
-   The (new) output argument returns the result of the command.<br />
+   The (new) output argument returns the result of the command.
 
 
 - `induce(-Program)`

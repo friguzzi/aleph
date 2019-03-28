@@ -9856,7 +9856,7 @@ lazy_evaluate(Name/Arity,M):-
 /**
  * model(:Pred:term) is det
  *
- * Predis of the form N/A, where the atom N is the name of the predicate, and A its arity. 
+ * Pred is of the form N/A, where the atom N is the name of the predicate, and A its arity. 
  * Specifies that predicate N/A will be used to construct and execute models 
  * in the leaves of model trees. This automatically results in predicate N/A being 
  * lazily evaluated (see lazy_evaluate/1).

@@ -9799,7 +9799,7 @@ determination(Pred1,Pred2,M):-
 /**
  * abducible(:Pred:term) is det
  *
- * Pred s of the form N/A, where the atom N is the name of the predicate, and A its arity. 
+ * Pred is of the form N/A, where the atom N is the name of the predicate, and A its arity. 
  * Specifies that ground atoms with symbol N/A can be abduced if required.
  */
 abducible(M:Name/Arity):-

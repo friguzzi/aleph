@@ -11273,7 +11273,8 @@ show_file(File):-
 	aleph_open(File,read,Stream), 
 	repeat,
 	read(Stream,Clause),
-	(Clause = end_of_file -> close(Stream);
+	(Clause = end_of_file -> close(Stream), !
+		;
 		writeq(Clause), write('.'), nl,
 		fail).
 

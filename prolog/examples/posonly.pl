@@ -161,7 +161,7 @@ has_gills(shark).
 has_gills(eel).
 
 nhas_gills(X) :- animal(X), not(has_gills(X)).
-dynamic aleph_false/0.
+
 aleph_false:-class(X,Y),class(X,Z),Y\=Z.
 
 :-end_bg.

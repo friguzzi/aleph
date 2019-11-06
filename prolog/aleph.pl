@@ -1968,7 +1968,7 @@ get_gain1(S,Flag,C,CL,EMin/EL,Last,Best/Node,Path,L1,Pos,Neg,OVars,E,Best1,M):-
         Node1 is Last + 1,
         arg(8,S,Caching),
         (Caching = true -> arg(15,S,CCLim),
-		get_cache_entry(CCLim,C,Entry,M);
+		get_cache_entry(CCLim,C,Entry);
 		Entry = false),
 	arg(35,S,VSearch),
 	(VSearch = true ->
@@ -4709,12 +4709,12 @@ rls_search(1, MaxTries, Time, Nodes, Selected,M) :-
 	),
  	asserta(M:'$aleph_search'(rls_nodes,0)),
  	stopwatch(Start),
-	estimate_numbers(_),	
+	estimate_numbers(_,M),
  	repeat,
  	retract(M:'$aleph_search'(rls_restart,R)),
  	R1 is R + 1,
  	asserta(M:'$aleph_search'(rls_restart,R1)),
- 	rls_thread(R, SearchStrat, Label, Nodes0, selected(Best,RCl,PCov,NCov,M)),
+	rls_thread(R, SearchStrat, Label, Nodes0, selected(Best,RCl,PCov,NCov),M),
  	Best = [_,_,_,F|_],
  	M:'$aleph_search'(rls_selected,selected([_,_,_,F1|_],_,_,_)),
  	(F1 >= F -> true;
@@ -4728,7 +4728,7 @@ rls_search(1, MaxTries, Time, Nodes, Selected,M) :-
  	retract(M:'$aleph_search'(rls_nodes,Nodes1)),
  	Nodes2 is Nodes0 + Nodes1,
  	asserta(M:'$aleph_search'(rls_nodes,Nodes2)),
- 	(R1 > MaxTries; discontinue_search(S,BestSoFar/_,Nodes2)),
+	(R1 > MaxTries; discontinue_search(S,BestSoFar/_,Nodes2,M)),
  	!,
  	stopwatch(Stop),
  	Time is Stop - Start,
@@ -4752,7 +4752,7 @@ rls_search(N, MaxTries, Time, Nodes, Selected,M) :-
 						(false:-true),[],[])))
 	),
  	asserta(M:'$aleph_search'(rls_nodes,0)),
-	estimate_numbers(_),	% so all threads can use same estimates
+	estimate_numbers(_,M),	% so all threads can use same estimates
 	thread_self(Master),
 	message_queue_create(Queue),
 	create_worker_pool(N, Master, Queue, WorkerIds,M),
@@ -7314,7 +7314,7 @@ estimate_proportion(0,_,_,0,[],_M):- !.
 estimate_proportion(N,L,S,P,Clauses,M):-
 	retractall(M:'$aleph_sat'(random,rselect(_))),
 	retractall(M:'$aleph_sat'(random,rselect_legal(L,_,_,_,_))),
-	get_random_wo_repl(N,L,Clauses),
+	get_random_wo_repl(N,L,Clauses,M),
 	length(Clauses,Total),
 	count_clause_status(Clauses,S,A,_),
 	(Total = 0 -> P = 0; P is A/Total),
@@ -7385,7 +7385,7 @@ randclause_wo_repl(N,L,C,S,C1,M):-
 	randclause(L,C,S,C1,M),	% if not accounting for variable renamings
 	% copy_term(C,C1),	% if accounting for variable renamings	
 	% numbervars(C1,0,_),	% if accounting for variable renamings
-	\+(prune(C,M)),
+	\+(M:prune(C)),
 	split_clause(C,Head,Body),
 	(setting(language,Lang,M) ->
 		lang_ok(Lang,Head,Body);
@@ -7556,23 +7556,23 @@ num_to_length1(L,CL,N,TotalSoFar,Length,M):-
 
 % refinement operator for randomised local search
 %	Type is one of clauses or theories
-rls_refine(clauses,_-[_,_,_,false],Clause,M):-
+rls_refine(clauses,_-[_,_,_,aleph_false],Clause,M):-
 	!,
 	sample_clauses(1,[Clause],M),
 	\+(old_move(clauses,Clause,M)).
 rls_refine(clauses,Clause1,Clause2,M):-
 	setting(moves,Max,M),
 	MaxMoves is Max,
-	once(retract(M:'$aleph_search'(rls_move,M))),
-	M =< MaxMoves,
-	p1_message('move'), p_message(M),
-	M1 is M + 1,
-	asserta(M:'$aleph_search'(rls_move,M1)),
+	once(retract(M:'$aleph_search'(rls_move,Mov))),
+	Mov =< MaxMoves,
+	p1_message('move'), p_message(Mov),
+	Mov1 is Mov + 1,
+	asserta(M:'$aleph_search'(rls_move,Mov1)),
 	clause_move(Move,Clause1,Clause2,M),
 	p_message(Move),
 	\+(old_move(clauses,Clause2,M)).
 
-rls_refine(theories,[_-[_,_,_,false]],Theory,M):-
+rls_refine(theories,[_-[_,_,_,aleph_false]],Theory,M):-
 	!,
 	once(theory_move(add_clause,[],Theory,M)),
 	\+(old_move(theories,Theory,M)).
@@ -7632,7 +7632,7 @@ clause_move(add_lit,C1,C2,M):-
 		(Key = false ->
         		get_pclause(Lits1,[],Clause1,_,_,_,M);
         		get_pclause(Lits1,Key,[],Clause1,_,_,_,M)),
-		\+(prune(Clause1))),
+		\+(M:prune(Clause1))),
 	C2 = L1-[E,T,Lits1,Clause1].
 
 % theory_move(+Type,+T1,-T2,M)

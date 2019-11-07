@@ -5630,12 +5630,12 @@ get_performance(M):-
 	setting(evalfn,Evalfn,M),
 	(Evalfn = sd; Evalfn = mse), !.
 get_performance(M):-
-	(setting(train_pos,PFile,M) ->
-		test(PFile,noshow,Tp,TotPos,M),
+	findall(Example,M:example(_,pos,Example),Pos),
+	findall(Example,M:example(_,neg,Example),Neg),
+	(test_ex(Pos,noshow,Tp,TotPos,M)->
 		Fn is TotPos - Tp;
 		TotPos = 0, Tp = 0, Fn = 0),
-	(setting(train_neg,NFile,M) ->
-		test(NFile,noshow,Fp,TotNeg,M),
+	(test_ex(Neg,noshow,Fp,TotNeg,M)->
 		Tn is TotNeg - Fp;
 		TotNeg = 0, Tn = 0, Fp = 0),
 	TotPos + TotNeg > 0,
@@ -8835,12 +8835,10 @@ index_clause((Head:-true),NextClause,(Head),M):-
 	!,
 	retract(M:'$aleph_global'(last_clause,last_clause(ClauseNum))),
 	NextClause is ClauseNum + 1,
-	write(NextClause/ClauseNum),nl,
 	asserta(M:'$aleph_global'(last_clause,last_clause(NextClause))).
 index_clause(Clause,NextClause,Clause,M):-
 	retract(M:'$aleph_global'(last_clause,last_clause(ClauseNum))),
 	NextClause is ClauseNum + 1,
-	write(NextClause/ClauseNum),nl,
 	asserta(M:'$aleph_global'(last_clause,last_clause(NextClause))).
 
 update_backpreds(Name/Arity,M):-
@@ -10552,6 +10550,42 @@ time(P,N,[Mean,Sd]):-
         time_loop(N,P,Times),
 	mean(Times,Mean),
 	sd(Times,Sd).
+
+test_ex(Exs,Flag,N,T,M):-
+	retractall(M:'$aleph_local'(covered,_)),
+	retractall(M:'$aleph_local'(total,_)),
+	asserta(M:'$aleph_local'(covered,0)),
+	asserta(M:'$aleph_local'(total,0)),
+    test_ex1(Exs,Flag,M),
+	retract(M:'$aleph_local'(covered,N)),
+	retract(M:'$aleph_local'(total,T)).
+
+test_ex1(Exs,Flag,M):-
+	setting(portray_examples,Pretty,M),
+	member(Example,Exs),
+	retract(M:'$aleph_local'(total,T0)),
+	T1 is T0 + 1,
+	asserta(M:'$aleph_local'(total,T1)),
+	(once(depth_bound_call(Example,M)) ->
+		(Flag = show ->
+			p1_message(covered),
+			aleph_portray(Example,Pretty,M),
+			nl;
+			true);
+		(Flag = show ->
+			p1_message('not covered'),
+			aleph_portray(Example,Pretty,M),
+			nl;
+			true),
+		fail),
+	retract(M:'$aleph_local'(covered,N0)),
+	N1 is N0 + 1,
+	asserta(M:'$aleph_local'(covered,N1)),
+	fail.
+
+test_ex1(_,_,_).
+
+
 
 test(F,Flag,N,T,M):-
 	retractall(M:'$aleph_local'(covered,_)),

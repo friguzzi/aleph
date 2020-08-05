@@ -10593,8 +10593,8 @@ test(F,Flag,N,T,M):-
 	asserta(M:'$aleph_local'(covered,0)),
 	asserta(M:'$aleph_local'(total,0)),
 	(F = [_|_] ->
-		test_files(F,Flag);
-		test_file(F,Flag)
+		test_files(F,Flag,M);
+		test_file(F,Flag,M)
 	),
 	retract(M:'$aleph_local'(covered,N)),
 	retract(M:'$aleph_local'(total,T)).

@@ -1134,7 +1134,7 @@ get_successes(Literal,*,Mo,M):-
 get_successes(Literal,N,Mo,M):-
 	integer(N),
 	N > 1,
-	reset_succ,
+	reset_succ(M),
 	get_nsuccesses(Literal,N,Mo,M).
 
 % get at most N matches for a literal

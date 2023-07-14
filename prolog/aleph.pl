@@ -9371,7 +9371,7 @@ evalfn(gini,[P,N|_],Val,_M):-
 		P1 is P/Total,
 		Val is 2*P1*(1-P1)), !.
 evalfn(accuracy,[P,N|_],Val,_M):-
-	(P = -inf -> Val is 0.5;
+	((P = -inf; P+N =:= 0) -> Val is 0.5;
 		Val is P / (P + N)), !.
 % the evaluation functions below are due to James Cussens
 evalfn(pbayes,[P,N|_],Val,M):-

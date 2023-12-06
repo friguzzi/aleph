@@ -4,7 +4,9 @@
        a. induce_features(Features)
 */
 /** <examples>
-?- induce_features(Features).
+?- induce_features(F),member((H :- Body),F),assert(features(Body,(H :- Body))),fail.
+?- show(train_pos).
+?- show(train_neg).
 */
 
 :- use_module(library(aleph)).
@@ -50,19 +52,15 @@
 :- aleph_set(portray_examples,true).
 
 aleph_portray(train_pos):-
-        setting(train_pos,File),
-        show_features(File,positive).
+        show_features(pos,positive).
 aleph_portray(train_neg):-
-        setting(train_neg,File),
-        show_features(File,negative).
+        show_features(neg,negative).
 
-show_features(File,Class):-
-        open(File,read,Stream),
-        repeat,
-        read(Stream,Example),
-        (Example = end_of_file -> close(Stream);
-                write_features(Example,Class),
-                fail).
+show_features(Type,Class):-
+        example(_,Type,Example),
+        write_features(Example,Class),
+        fail.
+show_features(_,_).
 
 write_features(Example,_):-
         features(_,(Example:- Body)),

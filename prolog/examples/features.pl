@@ -4,9 +4,7 @@
        a. induce_features(Features)
 */
 /** <examples>
-?- induce_features(F),assert(features(F)).
-?- show(train_pos).
-?- show(train_neg).
+?- induce_features(F),assert(features(F)),show(train_pos),show(train_neg).
 */
 
 :- use_module(library(aleph)).

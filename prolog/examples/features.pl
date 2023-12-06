@@ -4,7 +4,7 @@
        a. induce_features(Features)
 */
 /** <examples>
-?- induce_features(F),member((H :- Body),F),assert(features(Body,(H :- Body))),fail.
+?- induce_features(F),assert(features(F)).
 ?- show(train_pos).
 ?- show(train_neg).
 */
@@ -63,7 +63,8 @@ show_features(Type,Class):-
 show_features(_,_).
 
 write_features(Example,_):-
-        features(_,(Example:- Body)),
+        features(Features),
+        member((Example :- Body),Features),
         (Body -> write(1), write(' '); write(0), write(' ')),
         fail.
 write_features(_,Class):-

@@ -5019,14 +5019,14 @@ induce_max1(Finish,M):-
 	(setting(resample,Resample,M) -> true; Resample = 1),
         repeat,
         retract(M:'$aleph_local'(counter,Start)),
-	gen_sample(Resample,pos,Start),
-	get_besthyp(false),
-        update_coverset(pos,Start),
+	gen_sample(Resample,pos,Start,M),
+	get_besthyp(false,M),
+        update_coverset(pos,Start,M),
         Next is Start+1,
         assertz(M:'$aleph_local'(counter,Next)),
         Next > Finish, !,
 	retract(M:'$aleph_local'(counter,Next)).
-induce_max1(_).
+induce_max1(_,_).
 
 /**
  * induce_cover(:Program:list) is det
